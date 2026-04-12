@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>QuestModeQuestBackendURL</key>
+	<string></string>
+	<key>QuestModeUseFirebaseQuestProxy</key>
+	<false/>
+	<key>QuestModeFallbackFromProxyToDirectOpenAI</key>
+	<true/>
+	<key>QuestModeFirebaseFunctionsRegion</key>
+	<string>us-central1</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Quest Mode needs camera access to capture photo proof for your quests.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Quest Mode needs photo library access so you can attach images to your quests.</string>
+</dict>
+</plist>

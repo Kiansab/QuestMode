@@ -6,13 +6,110 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9FF8D09D2F79E5C200E32900 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9FF8D0812F79E5C200E32900 /* Assets.xcassets */; };
+		9FF8D09E2F79E5C200E32900 /* Achievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D07D2F79E5C200E32900 /* Achievement.swift */; };
+		9FF8D09F2F79E5C200E32900 /* QuestCompletionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0922F79E5C200E32900 /* QuestCompletionSheet.swift */; };
+		9FF8D0A02F79E5C200E32900 /* LevelRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0872F79E5C200E32900 /* LevelRingView.swift */; };
+		9FF8D0A12F79E5C200E32900 /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D07E2F79E5C200E32900 /* AchievementsView.swift */; };
+		9FF8D0A22F79E5C200E32900 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0852F79E5C200E32900 /* HomeView.swift */; };
+		9FF8D0A32F79E5C200E32900 /* QuestViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D09A2F79E5C200E32900 /* QuestViewModel.swift */; };
+		9FF8D0A42F79E5C200E32900 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D08A2F79E5C200E32900 /* OnboardingView.swift */; };
+		9FF8D0A52F79E5C200E32900 /* QuestCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0912F79E5C200E32900 /* QuestCategory.swift */; };
+		9FF8D0A62F79E5C200E32900 /* QuestModeBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0972F79E5C200E32900 /* QuestModeBackground.swift */; };
+		9FF8D0A72F79E5C200E32900 /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D08C2F79E5C200E32900 /* ProgressView.swift */; };
+		9FF8D0A82F79E5C200E32900 /* QuestLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0942F79E5C200E32900 /* QuestLogView.swift */; };
+		9FF8D0A92F79E5C200E32900 /* HeroProgressPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0842F79E5C200E32900 /* HeroProgressPanel.swift */; };
+		9FF8D0AA2F79E5C200E32900 /* QuestCardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0902F79E5C200E32900 /* QuestCardStyle.swift */; };
+		9FF8D0AB2F79E5C200E32900 /* ProofType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D08E2F79E5C200E32900 /* ProofType.swift */; };
+		9FF8D0AC2F79E5C200E32900 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0802F79E5C200E32900 /* AppTheme.swift */; };
+		9FF8D0AD2F79E5C200E32900 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0862F79E5C200E32900 /* ImagePicker.swift */; };
+		9FF8D0AE2F79E5C200E32900 /* QuestSuccessCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0982F79E5C200E32900 /* QuestSuccessCard.swift */; };
+		9FF8D0AF2F79E5C200E32900 /* Quest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D08F2F79E5C200E32900 /* Quest.swift */; };
+		9FF8D0B02F79E5C200E32900 /* ProofStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D08D2F79E5C200E32900 /* ProofStatus.swift */; };
+		9FF8D0B12F79E5C200E32900 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0892F79E5C200E32900 /* MainTabView.swift */; };
+		9FF8D0B22F79E5C200E32900 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0882F79E5C200E32900 /* LoginView.swift */; };
+		9FF8D0B32F79E5C200E32900 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D07F2F79E5C200E32900 /* AppAppearance.swift */; };
+		9FF8D0B42F79E5C200E32900 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D08B2F79E5C200E32900 /* ProfileView.swift */; };
+		9FF8D0B52F79E5C200E32900 /* QuestLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0932F79E5C200E32900 /* QuestLogEntry.swift */; };
+		9FF8D0B62F79E5C200E32900 /* HapticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0832F79E5C200E32900 /* HapticsManager.swift */; };
+		9FF8D0B72F79E5C200E32900 /* QuestModeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0962F79E5C200E32900 /* QuestModeApp.swift */; };
+		9FF8D0B82F79E5C200E32900 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0822F79E5C200E32900 /* ContentView.swift */; };
+		9FF8D0B92F79E5C200E32900 /* QuestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0992F79E5C200E32900 /* QuestsView.swift */; };
+		9FF8D0BC2F79E6C400E32900 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 9FF8D0BB2F79E6C400E32900 /* FirebaseAnalytics */; };
+		9FF8D0BE2F79E6C400E32900 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 9FF8D0BD2F79E6C400E32900 /* FirebaseAuth */; };
+		9FF8D0C02F79E6C400E32900 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 9FF8D0BF2F79E6C400E32900 /* FirebaseFirestore */; };
+		9FF8D0C12F79E90000E32900 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 9FF8D0C22F79E90000E32900 /* FirebaseCrashlytics */; };
+		9FF8D0C72F79EA0000E32900 /* ScreenGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0C82F79EA0000E32900 /* ScreenGuide.swift */; };
+		9FF8D0CE2F79ED0000E32900 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0CF2F79ED0000E32900 /* ForgotPasswordView.swift */; };
+		9FF8D0D22F79EE0000E32900 /* OnboardingProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0D32F79EE0000E32900 /* OnboardingProfile.swift */; };
+		9FF8D0D42F79EE0000E32900 /* QuestPersonalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0D52F79EE0000E32900 /* QuestPersonalization.swift */; };
+		9FF8D0D62F79EF0000E32900 /* AIQuestGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0D72F79EF0000E32900 /* AIQuestGenerator.swift */; };
+		9FF8D0DF2F7B540000E32900 /* OpenAIAPIKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0DE2F7B540000E32900 /* OpenAIAPIKeyStore.swift */; };
+		9FF8D0E62F7B560000E32900 /* QuestModeRemoteAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0E52F7B560000E32900 /* QuestModeRemoteAI.swift */; };
+		9FF8D0E82F7B560000E32900 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 9FF8D0E72F7B560000E32900 /* FirebaseFunctions */; };
+		9FF8D0DA2F7B520000E32900 /* OpenAISecrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9FF8D0DB2F7B520000E32900 /* OpenAISecrets.plist */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		9FF8D06F2F79E58700E32900 /* QuestMode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuestMode.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9FF8D07D2F79E5C200E32900 /* Achievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievement.swift; sourceTree = "<group>"; };
+		9FF8D07E2F79E5C200E32900 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
+		9FF8D07F2F79E5C200E32900 /* AppAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearance.swift; sourceTree = "<group>"; };
+		9FF8D0802F79E5C200E32900 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		9FF8D0812F79E5C200E32900 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9FF8D0822F79E5C200E32900 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		9FF8D0832F79E5C200E32900 /* HapticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticsManager.swift; sourceTree = "<group>"; };
+		9FF8D0842F79E5C200E32900 /* HeroProgressPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeroProgressPanel.swift; sourceTree = "<group>"; };
+		9FF8D0852F79E5C200E32900 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		9FF8D0862F79E5C200E32900 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
+		9FF8D0872F79E5C200E32900 /* LevelRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRingView.swift; sourceTree = "<group>"; };
+		9FF8D0882F79E5C200E32900 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		9FF8D0892F79E5C200E32900 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		9FF8D08A2F79E5C200E32900 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		9FF8D08B2F79E5C200E32900 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		9FF8D08C2F79E5C200E32900 /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
+		9FF8D08D2F79E5C200E32900 /* ProofStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofStatus.swift; sourceTree = "<group>"; };
+		9FF8D08E2F79E5C200E32900 /* ProofType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProofType.swift; sourceTree = "<group>"; };
+		9FF8D08F2F79E5C200E32900 /* Quest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quest.swift; sourceTree = "<group>"; };
+		9FF8D0902F79E5C200E32900 /* QuestCardStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestCardStyle.swift; sourceTree = "<group>"; };
+		9FF8D0912F79E5C200E32900 /* QuestCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestCategory.swift; sourceTree = "<group>"; };
+		9FF8D0922F79E5C200E32900 /* QuestCompletionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestCompletionSheet.swift; sourceTree = "<group>"; };
+		9FF8D0932F79E5C200E32900 /* QuestLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestLogEntry.swift; sourceTree = "<group>"; };
+		9FF8D0942F79E5C200E32900 /* QuestLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestLogView.swift; sourceTree = "<group>"; };
+		9FF8D0962F79E5C200E32900 /* QuestModeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestModeApp.swift; sourceTree = "<group>"; };
+		9FF8D0972F79E5C200E32900 /* QuestModeBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestModeBackground.swift; sourceTree = "<group>"; };
+		9FF8D0982F79E5C200E32900 /* QuestSuccessCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestSuccessCard.swift; sourceTree = "<group>"; };
+		9FF8D0992F79E5C200E32900 /* QuestsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestsView.swift; sourceTree = "<group>"; };
+		9FF8D09A2F79E5C200E32900 /* QuestViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestViewModel.swift; sourceTree = "<group>"; };
+		9FF8D0C32F79E75300E32900 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		9FF8D0C82F79EA0000E32900 /* ScreenGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenGuide.swift; sourceTree = "<group>"; };
+		9FF8D0CF2F79ED0000E32900 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
+		9FF8D0D32F79EE0000E32900 /* OnboardingProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProfile.swift; sourceTree = "<group>"; };
+		9FF8D0D52F79EE0000E32900 /* QuestPersonalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestPersonalization.swift; sourceTree = "<group>"; };
+		9FF8D0D72F79EF0000E32900 /* AIQuestGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIQuestGenerator.swift; sourceTree = "<group>"; };
+		9FF8D0DE2F7B540000E32900 /* OpenAIAPIKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIAPIKeyStore.swift; sourceTree = "<group>"; };
+		9FF8D0E52F7B560000E32900 /* QuestModeRemoteAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestModeRemoteAI.swift; sourceTree = "<group>"; };
+		9FF8D0DB2F7B520000E32900 /* OpenAISecrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = QuestMode/OpenAISecrets.plist; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9FF8D0C62F7B4A8400E32900 /* Exceptions for "QuestMode" folder in "QuestMode" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				OpenAISecrets.plist,
+			);
+			target = 9FF8D06E2F79E58700E32900 /* QuestMode */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9FF8D0712F79E58700E32900 /* QuestMode */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9FF8D0C62F7B4A8400E32900 /* Exceptions for "QuestMode" folder in "QuestMode" target */,
+			);
 			path = QuestMode;
 			sourceTree = "<group>";
 		};
@@ -23,6 +120,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9FF8D0BC2F79E6C400E32900 /* FirebaseAnalytics in Frameworks */,
+				9FF8D0BE2F79E6C400E32900 /* FirebaseAuth in Frameworks */,
+				9FF8D0C02F79E6C400E32900 /* FirebaseFirestore in Frameworks */,
+				9FF8D0C12F79E90000E32900 /* FirebaseCrashlytics in Frameworks */,
+				9FF8D0E82F7B560000E32900 /* FirebaseFunctions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +135,44 @@
 			isa = PBXGroup;
 			children = (
 				9FF8D0712F79E58700E32900 /* QuestMode */,
+				9FF8D0DB2F7B520000E32900 /* OpenAISecrets.plist */,
+				9FF8D07D2F79E5C200E32900 /* Achievement.swift */,
+				9FF8D07E2F79E5C200E32900 /* AchievementsView.swift */,
+				9FF8D07F2F79E5C200E32900 /* AppAppearance.swift */,
+				9FF8D0802F79E5C200E32900 /* AppTheme.swift */,
+				9FF8D0C82F79EA0000E32900 /* ScreenGuide.swift */,
+				9FF8D0822F79E5C200E32900 /* ContentView.swift */,
+				9FF8D0832F79E5C200E32900 /* HapticsManager.swift */,
+				9FF8D0842F79E5C200E32900 /* HeroProgressPanel.swift */,
+				9FF8D0852F79E5C200E32900 /* HomeView.swift */,
+				9FF8D0862F79E5C200E32900 /* ImagePicker.swift */,
+				9FF8D0872F79E5C200E32900 /* LevelRingView.swift */,
+				9FF8D0882F79E5C200E32900 /* LoginView.swift */,
+				9FF8D0CF2F79ED0000E32900 /* ForgotPasswordView.swift */,
+				9FF8D0D32F79EE0000E32900 /* OnboardingProfile.swift */,
+				9FF8D0D52F79EE0000E32900 /* QuestPersonalization.swift */,
+				9FF8D0D72F79EF0000E32900 /* AIQuestGenerator.swift */,
+				9FF8D0DE2F7B540000E32900 /* OpenAIAPIKeyStore.swift */,
+				9FF8D0E52F7B560000E32900 /* QuestModeRemoteAI.swift */,
+				9FF8D0892F79E5C200E32900 /* MainTabView.swift */,
+				9FF8D08A2F79E5C200E32900 /* OnboardingView.swift */,
+				9FF8D08B2F79E5C200E32900 /* ProfileView.swift */,
+				9FF8D08C2F79E5C200E32900 /* ProgressView.swift */,
+				9FF8D08D2F79E5C200E32900 /* ProofStatus.swift */,
+				9FF8D08E2F79E5C200E32900 /* ProofType.swift */,
+				9FF8D08F2F79E5C200E32900 /* Quest.swift */,
+				9FF8D0902F79E5C200E32900 /* QuestCardStyle.swift */,
+				9FF8D0912F79E5C200E32900 /* QuestCategory.swift */,
+				9FF8D0922F79E5C200E32900 /* QuestCompletionSheet.swift */,
+				9FF8D0932F79E5C200E32900 /* QuestLogEntry.swift */,
+				9FF8D0942F79E5C200E32900 /* QuestLogView.swift */,
+				9FF8D0962F79E5C200E32900 /* QuestModeApp.swift */,
+				9FF8D0972F79E5C200E32900 /* QuestModeBackground.swift */,
+				9FF8D0982F79E5C200E32900 /* QuestSuccessCard.swift */,
+				9FF8D0992F79E5C200E32900 /* QuestsView.swift */,
+				9FF8D09A2F79E5C200E32900 /* QuestViewModel.swift */,
+				9FF8D0C32F79E75300E32900 /* GoogleService-Info.plist */,
+				9FF8D0812F79E5C200E32900 /* Assets.xcassets */,
 				9FF8D0702F79E58700E32900 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -65,6 +205,11 @@
 			);
 			name = QuestMode;
 			packageProductDependencies = (
+				9FF8D0BB2F79E6C400E32900 /* FirebaseAnalytics */,
+				9FF8D0BD2F79E6C400E32900 /* FirebaseAuth */,
+				9FF8D0BF2F79E6C400E32900 /* FirebaseFirestore */,
+				9FF8D0C22F79E90000E32900 /* FirebaseCrashlytics */,
+				9FF8D0E72F7B560000E32900 /* FirebaseFunctions */,
 			);
 			productName = QuestMode;
 			productReference = 9FF8D06F2F79E58700E32900 /* QuestMode.app */;
@@ -82,6 +227,7 @@
 				TargetAttributes = {
 					9FF8D06E2F79E58700E32900 = {
 						CreatedOnToolsVersion = 26.3;
+						LastSwiftMigration = 2630;
 					};
 				};
 			};
@@ -94,6 +240,9 @@
 			);
 			mainGroup = 9FF8D0662F79E58700E32900;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9FF8D0BA2F79E6C400E32900 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9FF8D0702F79E58700E32900 /* Products */;
 			projectDirPath = "";
@@ -109,6 +258,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9FF8D09D2F79E5C200E32900 /* Assets.xcassets in Resources */,
+				9FF8D0DA2F7B520000E32900 /* OpenAISecrets.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +270,41 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9FF8D09E2F79E5C200E32900 /* Achievement.swift in Sources */,
+				9FF8D09F2F79E5C200E32900 /* QuestCompletionSheet.swift in Sources */,
+				9FF8D0A02F79E5C200E32900 /* LevelRingView.swift in Sources */,
+				9FF8D0A12F79E5C200E32900 /* AchievementsView.swift in Sources */,
+				9FF8D0A22F79E5C200E32900 /* HomeView.swift in Sources */,
+				9FF8D0A32F79E5C200E32900 /* QuestViewModel.swift in Sources */,
+				9FF8D0A42F79E5C200E32900 /* OnboardingView.swift in Sources */,
+				9FF8D0A52F79E5C200E32900 /* QuestCategory.swift in Sources */,
+				9FF8D0A62F79E5C200E32900 /* QuestModeBackground.swift in Sources */,
+				9FF8D0A72F79E5C200E32900 /* ProgressView.swift in Sources */,
+				9FF8D0A82F79E5C200E32900 /* QuestLogView.swift in Sources */,
+				9FF8D0A92F79E5C200E32900 /* HeroProgressPanel.swift in Sources */,
+				9FF8D0AA2F79E5C200E32900 /* QuestCardStyle.swift in Sources */,
+				9FF8D0AB2F79E5C200E32900 /* ProofType.swift in Sources */,
+				9FF8D0AC2F79E5C200E32900 /* AppTheme.swift in Sources */,
+				9FF8D0C72F79EA0000E32900 /* ScreenGuide.swift in Sources */,
+				9FF8D0AD2F79E5C200E32900 /* ImagePicker.swift in Sources */,
+				9FF8D0AE2F79E5C200E32900 /* QuestSuccessCard.swift in Sources */,
+				9FF8D0AF2F79E5C200E32900 /* Quest.swift in Sources */,
+				9FF8D0B02F79E5C200E32900 /* ProofStatus.swift in Sources */,
+				9FF8D0B12F79E5C200E32900 /* MainTabView.swift in Sources */,
+				9FF8D0B22F79E5C200E32900 /* LoginView.swift in Sources */,
+				9FF8D0CE2F79ED0000E32900 /* ForgotPasswordView.swift in Sources */,
+				9FF8D0D22F79EE0000E32900 /* OnboardingProfile.swift in Sources */,
+				9FF8D0D42F79EE0000E32900 /* QuestPersonalization.swift in Sources */,
+				9FF8D0D62F79EF0000E32900 /* AIQuestGenerator.swift in Sources */,
+				9FF8D0DF2F7B540000E32900 /* OpenAIAPIKeyStore.swift in Sources */,
+				9FF8D0E62F7B560000E32900 /* QuestModeRemoteAI.swift in Sources */,
+				9FF8D0B32F79E5C200E32900 /* AppAppearance.swift in Sources */,
+				9FF8D0B42F79E5C200E32900 /* ProfileView.swift in Sources */,
+				9FF8D0B52F79E5C200E32900 /* QuestLogEntry.swift in Sources */,
+				9FF8D0B62F79E5C200E32900 /* HapticsManager.swift in Sources */,
+				9FF8D0B72F79E5C200E32900 /* QuestModeApp.swift in Sources */,
+				9FF8D0B82F79E5C200E32900 /* ContentView.swift in Sources */,
+				9FF8D0B92F79E5C200E32900 /* QuestsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,14 +432,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = AF4NABR25S;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuestMode/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "\"Quest Mode needs camera access to let you upload proof of your quests.\"";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "\"Quest Mode needs gallery access to let you choose photos for your profile.\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -264,24 +451,22 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kian.QuestMode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
+				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 26.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -290,14 +475,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = AF4NABR25S;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuestMode/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "\"Quest Mode needs camera access to let you upload proof of your quests.\"";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "\"Quest Mode needs gallery access to let you choose photos for your profile.\"";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -308,24 +494,21 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kian.QuestMode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
+				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 26.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -351,6 +534,45 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		9FF8D0BA2F79E6C400E32900 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = 12.11.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9FF8D0BB2F79E6C400E32900 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9FF8D0BA2F79E6C400E32900 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		9FF8D0BD2F79E6C400E32900 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9FF8D0BA2F79E6C400E32900 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		9FF8D0BF2F79E6C400E32900 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9FF8D0BA2F79E6C400E32900 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		9FF8D0C22F79E90000E32900 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9FF8D0BA2F79E6C400E32900 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		9FF8D0E72F7B560000E32900 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9FF8D0BA2F79E6C400E32900 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9FF8D0672F79E58700E32900 /* Project object */;
 }

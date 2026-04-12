@@ -1,0 +1,16 @@
+{
+  "name": "questmode-backend",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "firebase-admin": "^12.6.0",
+    "openai": "^4.73.0"
+  }
+}

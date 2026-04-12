@@ -1,0 +1,14 @@
+# API keys — never commit real secrets
+QuestMode/OpenAISecrets.plist
+OpenAISecrets.plist
+
+# Node (backend)
+backend/node_modules/
+
+# Xcode / build
+build/
+*.xcuserstate
+xcuserdata/
+
+# Firebase local
+.firebase/

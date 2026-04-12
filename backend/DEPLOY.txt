@@ -1,0 +1,51 @@
+Quest Mode — your own server (one OpenAI key, no Firebase Blaze)
+
+WHAT THIS IS
+  Small Node server. You host it on Railway, Fly.io, Render, a VPS, etc.
+  You put OPENAI_API_KEY on the server. The app sends prompts + the user’s Firebase login token.
+  The server checks the token, then calls OpenAI.
+
+WHAT YOU NEED
+  1) Node 20+
+  2) OpenAI API key (your $5 credit is fine)
+  3) Firebase “service account” JSON (free) — Firebase Console → Project settings → Service accounts → Generate new private key
+     Paste the whole JSON as one line into env FIREBASE_SERVICE_ACCOUNT_JSON on your host (or use file path locally with GOOGLE_APPLICATION_CREDENTIALS)
+
+LOCAL TEST
+  1) cd backend && npm install
+  2) export OPENAI_API_KEY="sk-..."
+     export FIREBASE_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'   # full JSON, one line
+     node index.mjs
+  3) curl -s http://127.0.0.1:8787/health   → {"ok":true}
+
+DEPLOY (Railway — simple)
+  1) Push this repo to GitHub (or connect local folder if Railway supports it).
+  2) railway.app → New Project → Deploy from GitHub → pick repo.
+  3) Project → Settings → set Root Directory to: backend
+     (Or deploy only the backend folder.)
+  4) Variables tab — add:
+       OPENAI_API_KEY = sk-...
+       FIREBASE_SERVICE_ACCOUNT_JSON = paste entire service account JSON (Railway accepts multi-line in the value)
+  5) If the service uses Docker: Dockerfile is in backend/. Or turn off Docker and use Nixpacks:
+       Build = npm ci, Start = npm start (package.json "start" runs node index.mjs).
+  6) Deploy → copy the public HTTPS URL (e.g. https://something.up.railway.app).
+  7) Browser: https://YOUR_URL/health → {"ok":true}
+
+XCODE AFTER DEPLOY
+  1) Open QuestMode/Info.plist
+  2) Set QuestModeQuestBackendURL to that base URL only (no path, optional no trailing slash), e.g. https://something.up.railway.app
+  3) QuestModeUseFirebaseQuestProxy = NO (you are using this server, not Cloud Functions).
+  4) Users must be signed in with Firebase Auth — the app sends their ID token to the backend.
+
+OPTIONAL: Docker build locally
+  cd backend && docker build -t questmode-api . && docker run --rm -p 8787:8787 -e PORT=8787 -e OPENAI_API_KEY=... -e FIREBASE_SERVICE_ACCOUNT_JSON='...' questmode-api
+  Note: hosts usually set PORT automatically; do not hardcode 8787 in production.
+
+APP SETTINGS (Info.plist)
+  QuestModeQuestBackendURL = https://your-server.example
+  QuestModeUseFirebaseQuestProxy = NO
+  QuestModeFallbackFromProxyToDirectOpenAI = YES  (lets you use Profile key if server is down)
+
+SECURITY
+  Never commit OPENAI_API_KEY or service account JSON to git.
+  Use HTTPS only in production.
