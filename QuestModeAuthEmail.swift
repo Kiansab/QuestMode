@@ -1,29 +1,20 @@
 import Foundation
 import FirebaseAuth
 
-/// Sends Quest Mode–branded auth emails via the backend (Resend).
-/// Falls back to Firebase’s default mail if branded email isn’t production-ready
-/// (unverified domain, resend.dev test mode, missing key, cold-start errors, etc.).
+/// Auth emails via **Resend only** (Quest Mode branded). Firebase Auth still owns accounts;
+/// Firebase’s built-in mailers are not used for verification or password reset.
 enum QuestModeAuthEmail {
 
-    /// Must stay on a Firebase Auth authorized domain (see Firebase Console → Authentication → Settings).
+    /// Must stay on a Firebase Auth authorized domain (continue URL after tapping the link).
     private static let continueURL = URL(string: "https://questmode-298cc.firebaseapp.com")!
 
     private static var backendBaseURL: URL? {
         QuestModeRemoteAI.customBackendBaseURL
     }
 
-    private static var actionCodeSettings: ActionCodeSettings {
-        let settings = ActionCodeSettings()
-        settings.url = continueURL
-        settings.handleCodeInApp = false
-        return settings
-    }
-
-    /// Verification email for the signed-in user.
-    /// Prefers branded Resend mail; falls back to Firebase if Resend/domain isn’t ready.
+    /// Verification email for the signed-in user — Resend + Admin-generated link only.
     static func sendVerification(completion: ((Error?) -> Void)? = nil) {
-        guard let user = Auth.auth().currentUser else {
+        guard Auth.auth().currentUser != nil else {
             completion?(NSError(domain: "QuestModeAuthEmail", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: "Not signed in."
             ]))
@@ -35,15 +26,12 @@ enum QuestModeAuthEmail {
                 try await sendBranded(kind: "verify", email: nil)
                 await MainActor.run { completion?(nil) }
             } catch {
-                // Branded path not ready / failed → Firebase still delivers to any inbox.
-                user.sendEmailVerification(with: actionCodeSettings) { firebaseError in
-                    completion?(firebaseError)
-                }
+                await MainActor.run { completion?(friendly(error)) }
             }
         }
     }
 
-    /// Password reset — works while signed out.
+    /// Password reset — Resend only (works while signed out).
     static func sendPasswordReset(email: String, completion: ((Error?) -> Void)? = nil) {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         Task {
@@ -51,22 +39,39 @@ enum QuestModeAuthEmail {
                 try await sendBranded(kind: "password_reset", email: trimmed, requireAuth: false)
                 await MainActor.run { completion?(nil) }
             } catch {
-                Auth.auth().sendPasswordReset(withEmail: trimmed, actionCodeSettings: actionCodeSettings) { firebaseError in
-                    completion?(firebaseError)
-                }
+                await MainActor.run { completion?(friendly(error)) }
             }
         }
     }
 
+    private static func friendly(_ error: Error) -> Error {
+        let ns = error as NSError
+        let raw = (ns.localizedDescription).lowercased()
+        if raw.contains("resend.dev") || raw.contains("only send testing") || raw.contains("own email") {
+            return NSError(domain: "QuestModeAuthEmail", code: ns.code, userInfo: [
+                NSLocalizedDescriptionKey:
+                    "Branded mail isn’t set up for every inbox yet. Finish questmode.app in Resend (DNS), set RESEND_FROM to noreply@questmode.app on Render, then Resend."
+            ])
+        }
+        if raw.contains("not configured") || raw.contains("missing") || ns.code == 503 {
+            return NSError(domain: "QuestModeAuthEmail", code: ns.code, userInfo: [
+                NSLocalizedDescriptionKey:
+                    "Verification email service isn’t ready. Check Resend + Render (RESEND_API_KEY / RESEND_FROM)."
+            ])
+        }
+        return ns
+    }
+
     private static func sendBranded(kind: String, email: String?, requireAuth: Bool = true) async throws {
         guard let base = backendBaseURL else {
-            throw URLError(.badURL)
+            throw NSError(domain: "QuestModeAuthEmail", code: 503, userInfo: [
+                NSLocalizedDescriptionKey: "Quest backend URL missing from this build."
+            ])
         }
         let url = base.appendingPathComponent("v1").appendingPathComponent("send-auth-email")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // Render free tier cold-starts can exceed 20s.
         request.timeoutInterval = 45
 
         if requireAuth {
@@ -85,7 +90,8 @@ enum QuestModeAuthEmail {
         if http.statusCode == 200 {
             return
         }
-        let message = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.error
+        let decoded = try? JSONDecoder().decode(ErrorBody.self, from: data)
+        let message = decoded?.error
             ?? String(data: data, encoding: .utf8)
             ?? "Email send failed"
         throw NSError(domain: "QuestModeAuthEmail", code: http.statusCode, userInfo: [

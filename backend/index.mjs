@@ -163,15 +163,6 @@ async function sendResendEmail({ to, subject, html }) {
     throw err;
   }
 
-  // Fail fast when domain/DNS isn't ready so the iOS app falls back to Firebase Auth mail.
-  const status = await getBrandedEmailStatus();
-  if (!status.ready) {
-    const err = new Error(status.reason || "Branded email not ready");
-    err.status = 503;
-    err.code = "branded_email_not_ready";
-    throw err;
-  }
-
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -187,8 +178,10 @@ async function sendResendEmail({ to, subject, html }) {
   });
   const body = await r.json().catch(() => ({}));
   if (!r.ok) {
-    const err = new Error(body?.message || body?.error || `Resend failed (${r.status})`);
+    const msg = body?.message || body?.error || `Resend failed (${r.status})`;
+    const err = new Error(msg);
     err.status = 502;
+    err.code = "resend_send_failed";
     throw err;
   }
   return body;

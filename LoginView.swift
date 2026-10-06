@@ -1,487 +1,346 @@
 import SwiftUI
 import Combine
 import FirebaseAuth
+import UIKit
 
 struct LoginView: View {
 
     @EnvironmentObject var viewModel: QuestViewModel
-    @EnvironmentObject private var theme: ThemeManager
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @FocusState private var focusedField: AuthField?
 
-    @State private var isSignUpMode: Bool = false
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var firstName: String = ""
-    @State private var lastName: String = ""
-
-    @State private var isProcessing: Bool = false
-    @State private var alertMessage: String = ""
-    @State private var showAlert: Bool = false
-    @State private var headerGlow = false
+    @State private var isSignUpMode = false
+    @State private var email = ""
+    @State private var password = ""
+    @State private var firstName = ""
+    @State private var lastName = ""
+    @State private var isProcessing = false
+    @State private var alertMessage = ""
+    @State private var showAlert = false
     @State private var showForgotPassword = false
 
-    private var isWideLayout: Bool {
-        horizontalSizeClass == .regular
+    private enum AuthField: Hashable {
+        case firstName, lastName, email, password
     }
 
-    /// Slightly “zooms out” the auth form so shadows/fields clear the screen edges on narrow phones.
-    private var loginContentScale: CGFloat {
-        isWideLayout ? 0.98 : 0.86
+    private var isWide: Bool { horizontalSizeClass == .regular }
+    private var canSubmit: Bool {
+        !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !password.isEmpty
+            && !isProcessing
     }
 
     var body: some View {
         NavigationStack {
-            loginContent
-                .toolbar(.hidden, for: .navigationBar)
-                .navigationDestination(isPresented: $showForgotPassword) {
-                    ForgotPasswordView(initialEmail: email.trimmingCharacters(in: .whitespacesAndNewlines))
-                }
-        }
-    }
-
-    private var loginContent: some View {
-        ZStack {
-            QuestModeBackground(authFlow: true).ignoresSafeArea()
-
-            // Pin scroll width to the container so nothing can lay out wider than the screen (blur/shadows included).
-            GeometryReader { geo in
-                let W = geo.size.width
-                let columnMax = isWideLayout ? min(520, W) : W
-
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        headerBlock
-                            .padding(.top, 8)
-                            .padding(.bottom, 22)
-
-                        authModePicker
-                            .padding(.bottom, 20)
-
-                        formCard
-
-                        if !isSignUpMode {
-                            Button(action: { showForgotPassword = true }) {
-                                Text("Forgot password?")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(AppTheme.AuthFlow.accent)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                            .padding(.top, 12)
-                        }
-
-                        primaryButton
-                            .padding(.top, 20)
-
-                        Text("By continuing you agree to responsible use of Quest Mode.")
-                            .font(.caption2)
-                            .foregroundStyle(AppTheme.AuthFlow.textSecondary.opacity(0.88))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.top, 14)
-                            .padding(.bottom, 32)
-                    }
-                    .padding(.horizontal, horizontalPadding)
-                    .frame(minWidth: 0, maxWidth: columnMax)
-                    .frame(maxWidth: W, alignment: .center)
-                    .scaleEffect(loginContentScale, anchor: .top)
-                }
-                .frame(width: W, height: geo.size.height, alignment: .top)
-                .scrollDismissesKeyboard(.interactively)
-                .blur(radius: showAlert ? 5 : 0)
-                .disabled(showAlert)
-            }
-            .clipped()
-
-            if showAlert {
-                Color.black.opacity(0.55)
+            ZStack {
+                QuestModeBackground(authFlow: true)
                     .ignoresSafeArea()
-                    .onTapGesture {
-                        withAnimation { showAlert = false }
-                    }
 
                 GeometryReader { geo in
-                    QuestAlert(message: alertMessage, maxWidth: min(340, geo.size.width - 32)) {
-                        withAnimation { showAlert = false }
+                    let sidePad: CGFloat = isWide ? 48 : 32
+                    let column = min(isWide ? 400 : geo.size.width - sidePad * 2, geo.size.width - sidePad * 2)
+
+                    VStack(spacing: 0) {
+                        Spacer(minLength: isSignUpMode ? 28 : 48)
+
+                        titleBlock
+
+                        Spacer(minLength: isSignUpMode ? 28 : 40)
+
+                        formBlock
+                            .frame(width: column)
+
+                        Spacer(minLength: 20)
+
+                        footerLegal
+                            .frame(width: column)
+                            .padding(.bottom, max(20, geo.safeAreaInsets.bottom + 8))
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .animation(QuestMotion.content, value: isSignUpMode)
+                    .blur(radius: showAlert ? 4 : 0)
+                    .disabled(showAlert)
                 }
-                .transition(.scale.combined(with: .opacity))
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
-        .onAppear {
-            isProcessing = false
-            email = ""
-            password = ""
-            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
-                headerGlow = true
-            }
-        }
-    }
 
-    /// Keeps content inset on phones; centers a max-width column on iPad.
-    private var horizontalPadding: CGFloat {
-        isWideLayout ? 32 : 20
-    }
+                if showAlert {
+                    Color.black.opacity(0.58)
+                        .ignoresSafeArea()
+                        .onTapGesture { withAnimation(.easeOut(duration: 0.2)) { showAlert = false } }
 
-    private var headerBlock: some View {
-        VStack(spacing: 18) {
-            ZStack {
-                Circle()
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                AppTheme.AuthFlow.accent.opacity(0.55),
-                                AppTheme.AuthFlow.accent.opacity(0.12)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 2
-                    )
-                    .frame(width: 118, height: 118)
-                    .scaleEffect(headerGlow ? 1.03 : 1.0)
-
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                AppTheme.AuthFlow.accent.opacity(0.42),
-                                AppTheme.AuthFlow.accent.opacity(0.08),
-                                AppTheme.AuthFlow.card.opacity(0.5)
-                            ],
-                            center: .init(x: 0.35, y: 0.3),
-                            startRadius: 4,
-                            endRadius: 56
-                        )
-                    )
-                    .frame(width: 100, height: 100)
-                    .blur(radius: 0.5)
-
-                ZStack {
-                    Image(systemName: "map.fill")
-                        .font(.system(size: 34, weight: .semibold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [AppTheme.AuthFlow.accent, AppTheme.AuthFlow.accent.opacity(0.75)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .shadow(color: AppTheme.AuthFlow.accent.opacity(0.45), radius: 10, y: 3)
-
-                    Image(systemName: "sparkle")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color.white.opacity(0.95))
-                        .offset(x: 28, y: -26)
-                        .shadow(color: AppTheme.AuthFlow.accent.opacity(0.6), radius: 4)
+                    QuestAlert(message: alertMessage) {
+                        withAnimation(.easeOut(duration: 0.2)) { showAlert = false }
+                    }
+                    .transition(.opacity)
                 }
             }
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(isPresented: $showForgotPassword) {
+                ForgotPasswordView(initialEmail: email.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+            .onAppear { isProcessing = false }
+            .onTapGesture { focusedField = nil }
+        }
+        .preferredColorScheme(.dark)
+    }
 
-            VStack(spacing: 10) {
-                Text("Quest Mode")
-                    .font(.system(size: 32, weight: .heavy, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [AppTheme.AuthFlow.textPrimary, AppTheme.AuthFlow.textPrimary.opacity(0.88)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .shadow(color: AppTheme.AuthFlow.accent.opacity(0.22), radius: 16, y: 2)
-                    .minimumScaleFactor(0.85)
-                    .lineLimit(1)
+    // MARK: - Title (no icon)
 
-                Text("Daily quests, streaks, and levels—your real life as the game.")
-                    .font(.subheadline.weight(.medium))
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(5)
-                    .lineLimit(4)
-                    .minimumScaleFactor(0.88)
+    private var titleBlock: some View {
+        VStack(spacing: 10) {
+            Text("Quest Mode")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundStyle(AppTheme.AuthFlow.textPrimary)
+                .tracking(-0.5)
+
+            Text("Daily quests for your real goals.")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(AppTheme.AuthFlow.textSecondary)
+                .multilineTextAlignment(.center)
+
+            Text(isSignUpMode ? "Create your account" : "Welcome back")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppTheme.AuthFlow.textSecondary.opacity(0.8))
+                .padding(.top, 4)
+                .animation(.easeOut(duration: 0.2), value: isSignUpMode)
+        }
+        .frame(maxWidth: .infinity)
+        .multilineTextAlignment(.center)
+    }
+
+    // MARK: - Form
+
+    private var formBlock: some View {
+        VStack(spacing: 0) {
+            modeSwitcher
+                .padding(.bottom, 28)
+
+            VStack(spacing: 14) {
+                if isSignUpMode {
+                    authField(
+                        placeholder: "First name",
+                        text: $firstName,
+                        field: .firstName,
+                        contentType: .givenName,
+                        capitalization: .words,
+                        submit: .next
+                    ) { focusedField = .lastName }
+
+                    authField(
+                        placeholder: "Last name",
+                        text: $lastName,
+                        field: .lastName,
+                        contentType: .familyName,
+                        capitalization: .words,
+                        submit: .next
+                    ) { focusedField = .email }
+                }
+
+                authField(
+                    placeholder: "Email",
+                    text: $email,
+                    field: .email,
+                    contentType: isSignUpMode ? .emailAddress : .username,
+                    keyboard: .emailAddress,
+                    submit: .next
+                ) { focusedField = .password }
+
+                passwordField
+            }
+            .animation(.spring(response: 0.38, dampingFraction: 0.9), value: isSignUpMode)
+
+            if !isSignUpMode {
+                Button { showForgotPassword = true } label: {
+                    Text("Forgot password?")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(AppTheme.AuthFlow.textSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.top, 14)
+                .transition(.opacity)
+            }
+
+            primaryCTA
+                .padding(.top, isSignUpMode ? 28 : 24)
+
+            if !isSignUpMode {
+                Button {
+                    trySampleDay()
+                } label: {
+                    Text("Try a sample day without an account")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(AppTheme.AuthFlow.accent)
+                }
+                .padding(.top, 16)
+                .disabled(isProcessing)
+            }
+
+            Button {
+                withAnimation(.spring(response: 0.36, dampingFraction: 0.88)) {
+                    isSignUpMode.toggle()
+                }
+            } label: {
+                Text(isSignUpMode ? "Already have an account? Sign in" : "New here? Create an account")
+                    .font(.footnote.weight(.medium))
                     .foregroundStyle(AppTheme.AuthFlow.textSecondary)
-                    .padding(.horizontal, 8)
-
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                AppTheme.AuthFlow.accent.opacity(0.55),
-                                AppTheme.AuthFlow.accent.opacity(0.15)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(height: 3)
-                    .frame(maxWidth: 100)
-                    .padding(.top, 4)
             }
-            .frame(maxWidth: .infinity)
+            .padding(.top, 20)
         }
     }
 
-    private var authModePicker: some View {
+    private var modeSwitcher: some View {
         HStack(spacing: 0) {
-            modeButton(title: "Sign in", selected: !isSignUpMode) {
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.84)) {
+            modeChip("Sign in", selected: !isSignUpMode) {
+                withAnimation(QuestMotion.content) {
                     isSignUpMode = false
                 }
             }
-            modeButton(title: "Sign up", selected: isSignUpMode) {
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.84)) {
-                    isSignUpMode = true
-                }
+            modeChip("Sign up", selected: isSignUpMode) {
+                withAnimation(QuestMotion.content) { isSignUpMode = true }
             }
         }
-        .padding(5)
+        .padding(3)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(AppTheme.AuthFlow.cardSecondary.opacity(0.92))
+            Capsule(style: .continuous)
+                .fill(Color.white.opacity(0.06))
         )
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            AppTheme.AuthFlow.accent.opacity(0.35),
-                            AppTheme.AuthFlow.accent.opacity(0.08)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-        )
-        .shadow(color: Color.black.opacity(0.35), radius: 12, y: 5)
     }
 
-    private func modeButton(title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+    private func modeChip(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.subheadline.weight(.bold))
+                .font(.subheadline.weight(.semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(selected ? AnyShapeStyle(AppTheme.AuthFlow.accentGradient) : AnyShapeStyle(Color.clear))
-                )
-                .foregroundStyle(selected ? Color.white : AppTheme.AuthFlow.textSecondary)
-                .shadow(color: selected ? AppTheme.AuthFlow.accent.opacity(0.45) : .clear, radius: 10, y: 4)
+                .foregroundStyle(selected ? QuestChrome.onSoft : AppTheme.AuthFlow.textSecondary)
+                .background {
+                    if selected {
+                        Capsule(style: .continuous)
+                            .fill(QuestChrome.softWhite)
+                    }
+                }
         }
         .buttonStyle(.plain)
     }
 
-    private var formCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(isSignUpMode ? "Create your account" : "Welcome back")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(AppTheme.AuthFlow.textPrimary)
-
-                Text(isSignUpMode ? "We’ll send a quick email to verify you." : "Sign in to pick up your streak.")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(AppTheme.AuthFlow.textSecondary.opacity(0.95))
-            }
-
-            VStack(spacing: 14) {
-                if isSignUpMode {
-                    Group {
-                        if isWideLayout {
-                            HStack(spacing: 12) {
-                                labeledField("First name", systemImage: "person.fill", text: $firstName)
-                                labeledField("Last name", systemImage: "person.fill", text: $lastName)
-                            }
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                        } else {
-                            VStack(spacing: 14) {
-                                labeledField("First name", systemImage: "person.fill", text: $firstName)
-                                labeledField("Last name", systemImage: "person.fill", text: $lastName)
-                            }
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                        }
-                    }
-                }
-
-                labeledField("Email", systemImage: "envelope.fill", text: $email)
-                    .keyboardType(.emailAddress)
-                    .textContentType(isSignUpMode ? .emailAddress : .username)
-                    .textInputAutocapitalization(.never)
-
-                secureFieldBlock
-            }
-            .animation(.spring(response: 0.4, dampingFraction: 0.86), value: isSignUpMode)
-        }
-        .padding(22)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22)
-                .fill(AppTheme.AuthFlow.card)
-                .shadow(color: Color.black.opacity(0.5), radius: 22, y: 10)
-                .shadow(color: AppTheme.AuthFlow.accent.opacity(0.12), radius: 28, y: 4)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            AppTheme.AuthFlow.accent.opacity(0.42),
-                            AppTheme.AuthFlow.accent.opacity(0.06)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-        )
-    }
-
-    private var primaryButton: some View {
+    private var primaryCTA: some View {
         Button(action: handleAuth) {
-            HStack(spacing: 10) {
+            ZStack {
                 if isProcessing {
-                    SwiftUI.ProgressView()
-                        .tint(.white)
-                        .scaleEffect(1.05)
+                    QuestLoader(size: 26, compact: true)
                 } else {
-                    Image(systemName: isSignUpMode ? "sparkles" : "arrow.right.circle.fill")
-                        .font(.body.weight(.semibold))
-                    Text(isSignUpMode ? "Create account" : "Log in")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                    Text(isSignUpMode ? "Create account" : "Sign in")
+                        .font(.system(size: 17, weight: .bold))
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 17)
+            .frame(height: 54)
             .background(
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(AppTheme.AuthFlow.accentGradient)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18)
-                            .stroke(Color.white.opacity(0.22), lineWidth: 1)
-                    )
-                    .overlay(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.18), Color.clear],
-                            startPoint: .top,
-                            endPoint: .center
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 18))
-                        .allowsHitTesting(false)
-                    )
+                Capsule(style: .continuous)
+                    .fill(canSubmit ? QuestChrome.softWhite : QuestChrome.softWhite.opacity(0.22))
             )
-            .foregroundStyle(.white)
-            .shadow(color: AppTheme.AuthFlow.accent.opacity(0.42), radius: 16, y: 7)
+            .foregroundStyle(canSubmit ? QuestChrome.onSoft : QuestChrome.onSoft.opacity(0.4))
         }
         .buttonStyle(AuthPrimaryButtonStyle())
-        .disabled(email.isEmpty || password.isEmpty || isProcessing)
-        .opacity(email.isEmpty || password.isEmpty || isProcessing ? 0.5 : 1)
+        .questPressable()
+        .disabled(!canSubmit)
     }
 
-    private func labeledField(_ label: String, systemImage: String, text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(AppTheme.AuthFlow.textSecondary)
-
-            HStack(alignment: .center, spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(AppTheme.AuthFlow.accent.opacity(0.14))
-                        .frame(width: 38, height: 38)
-                    Image(systemName: systemImage)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(AppTheme.AuthFlow.accent)
-                }
-
-                TextField("", text: text, prompt: Text(label).foregroundStyle(AppTheme.AuthFlow.textSecondary.opacity(0.55)))
-                    .textFieldStyle(.plain)
-                    .font(.body)
-                    .foregroundStyle(AppTheme.AuthFlow.textPrimary)
-                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            }
-            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 13)
-            .background(AppTheme.AuthFlow.cardSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                AppTheme.AuthFlow.accent.opacity(0.28),
-                                AppTheme.AuthFlow.accent.opacity(0.06)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-            )
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    private var footerLegal: some View {
+        Text("By continuing you agree to Terms & Privacy.")
+            .font(.caption2)
+            .foregroundStyle(AppTheme.AuthFlow.textSecondary.opacity(0.55))
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
     }
 
-    private var secureFieldBlock: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Password")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(AppTheme.AuthFlow.textSecondary)
+    // MARK: - Fields (full-width, stacked — no side-by-side squeeze)
 
-            HStack(alignment: .center, spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(AppTheme.AuthFlow.accent.opacity(0.14))
-                        .frame(width: 38, height: 38)
-                    Image(systemName: "lock.fill")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(AppTheme.AuthFlow.accent)
-                }
-
-                SecureField("", text: $password, prompt: Text("Password").foregroundStyle(AppTheme.AuthFlow.textSecondary.opacity(0.55)))
-                    .textFieldStyle(.plain)
-                    .font(.body)
-                    .foregroundStyle(AppTheme.AuthFlow.textPrimary)
-                    .textContentType(isSignUpMode ? .newPassword : .password)
-                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            }
-            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 13)
-            .background(AppTheme.AuthFlow.cardSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                AppTheme.AuthFlow.accent.opacity(0.28),
-                                AppTheme.AuthFlow.accent.opacity(0.06)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
+    private func authField(
+        placeholder: String,
+        text: Binding<String>,
+        field: AuthField,
+        contentType: UITextContentType? = nil,
+        keyboard: UIKeyboardType = .default,
+        capitalization: TextInputAutocapitalization = .never,
+        submit: SubmitLabel = .next,
+        onSubmit: (() -> Void)? = nil
+    ) -> some View {
+        let focused = focusedField == field
+        return TextField("", text: text, prompt: Text(placeholder).foregroundStyle(AppTheme.AuthFlow.textSecondary.opacity(0.45)))
+            .textFieldStyle(.plain)
+            .font(.system(size: 17, weight: .regular))
+            .foregroundStyle(AppTheme.AuthFlow.textPrimary)
+            .keyboardType(keyboard)
+            .textInputAutocapitalization(capitalization)
+            .submitLabel(submit)
+            .optionalTextContentType(contentType)
+            .optionalOnSubmit(onSubmit)
+            .focused($focusedField, equals: field)
+            .padding(.horizontal, 18)
+            .frame(height: 54)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(focused ? 0.09 : 0.055))
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(focused ? AppTheme.AuthFlow.accent.opacity(0.5) : Color.white.opacity(0.08), lineWidth: 1)
+            )
+            .animation(.easeOut(duration: 0.15), value: focused)
+    }
+
+    private var passwordField: some View {
+        let focused = focusedField == .password
+        return SecureField("", text: $password, prompt: Text("Password").foregroundStyle(AppTheme.AuthFlow.textSecondary.opacity(0.45)))
+            .textFieldStyle(.plain)
+            .font(.system(size: 17, weight: .regular))
+            .foregroundStyle(AppTheme.AuthFlow.textPrimary)
+            .textContentType(isSignUpMode ? .newPassword : .password)
+            .submitLabel(.go)
+            .onSubmit { handleAuth() }
+            .focused($focusedField, equals: .password)
+            .padding(.horizontal, 18)
+            .frame(height: 54)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(focused ? 0.09 : 0.055))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(focused ? AppTheme.AuthFlow.accent.opacity(0.5) : Color.white.opacity(0.08), lineWidth: 1)
+            )
+            .animation(.easeOut(duration: 0.15), value: focused)
+    }
+
+    // MARK: - Auth
+
+    private func trySampleDay() {
+        isProcessing = true
+        Auth.auth().signInAnonymously { result, error in
+            DispatchQueue.main.async {
+                self.isProcessing = false
+                if let error = error as NSError? {
+                    self.handleFirebaseError(error)
+                    return
+                }
+                guard let user = result?.user else { return }
+                HapticsManager.shared.notifySuccess()
+                self.viewModel.resetOnboardingForNewAccount(uid: user.uid)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func handleAuth() {
         isProcessing = true
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard !email.isEmpty, !password.isEmpty else {
+        guard !trimmedEmail.isEmpty, !password.isEmpty else {
             isProcessing = false
             return
         }
 
         if isSignUpMode {
-            Auth.auth().createUser(withEmail: email, password: password) { result, error in
+            Auth.auth().createUser(withEmail: trimmedEmail, password: password) { result, error in
                 if let user = result?.user {
                     self.viewModel.resetOnboardingForNewAccount(uid: user.uid)
                 }
@@ -490,24 +349,29 @@ struct LoginView: View {
                     if let error = error as NSError? {
                         self.handleFirebaseError(error)
                     } else if let user = result?.user {
+                        HapticsManager.shared.notifySuccess()
                         let name = "\(self.firstName) \(self.lastName)".trimmingCharacters(in: .whitespacesAndNewlines)
                         if !name.isEmpty {
                             let change = user.createProfileChangeRequest()
                             change.displayName = name
                             change.commitChanges(completion: nil)
                         }
-                        user.sendEmailVerification(completion: nil)
+                        // One verification send at signup (gate only polls — avoids Firebase rate limits).
+                        QuestModeAuthEmail.sendVerification { _ in
+                            let key = "questmode_verify_email_last_send_\(user.uid)"
+                            UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: key)
+                        }
                     }
                 }
             }
         } else {
-            Auth.auth().signIn(withEmail: email, password: password) { _, error in
+            Auth.auth().signIn(withEmail: trimmedEmail, password: password) { _, error in
                 DispatchQueue.main.async {
                     self.isProcessing = false
-
                     if let error = error as NSError? {
                         self.handleFirebaseError(error)
                     } else {
+                        HapticsManager.shared.notifySuccess()
                         self.email = ""
                         self.password = ""
                     }
@@ -522,6 +386,7 @@ struct LoginView: View {
             case .emailAlreadyInUse: alertMessage = "This email is already registered."
             case .invalidEmail: alertMessage = "That email address looks incorrect."
             case .wrongPassword, .userNotFound: alertMessage = "Invalid email or password."
+            case .weakPassword: alertMessage = "Choose a stronger password (at least 6 characters)."
             default: alertMessage = error.localizedDescription
             }
         } else {
@@ -531,10 +396,23 @@ struct LoginView: View {
     }
 }
 
+private extension View {
+    @ViewBuilder
+    func optionalTextContentType(_ type: UITextContentType?) -> some View {
+        if let type { self.textContentType(type) } else { self }
+    }
+
+    @ViewBuilder
+    func optionalOnSubmit(_ action: (() -> Void)?) -> some View {
+        if let action { self.onSubmit(action) } else { self }
+    }
+}
+
 private struct AuthPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .opacity(configuration.isPressed ? 0.9 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
@@ -542,45 +420,42 @@ private struct AuthPrimaryButtonStyle: ButtonStyle {
 struct QuestAlert: View {
     var title: String = "Notice"
     let message: String
-    var maxWidth: CGFloat = 340
+    var maxWidth: CGFloat = 320
     var iconName: String = "exclamationmark.triangle.fill"
     var action: () -> Void
 
     var body: some View {
-        VStack(spacing: 18) {
-            Image(systemName: iconName)
-                .font(.system(size: 36))
-                .foregroundStyle(AppTheme.AuthFlow.accent)
-
+        VStack(spacing: 16) {
             Text(title)
                 .font(.system(size: 17, weight: .bold, design: .rounded))
                 .foregroundStyle(AppTheme.AuthFlow.textPrimary)
 
             Text(message)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundStyle(AppTheme.AuthFlow.textSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
             Button(action: action) {
                 Text("OK")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(size: 16, weight: .bold))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(AppTheme.AuthFlow.accentGradient))
-                    .foregroundStyle(.white)
+                    .frame(height: 48)
+                    .background(Capsule().fill(AppTheme.AuthFlow.accent))
+                    .foregroundStyle(Color.black)
             }
+            .buttonStyle(AuthPrimaryButtonStyle())
         }
-        .padding(22)
+        .padding(24)
         .frame(maxWidth: maxWidth)
         .background(AppTheme.AuthFlow.card)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(AppTheme.AuthFlow.cardBorder(accent: AppTheme.AuthFlow.accent), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.45), radius: 24, y: 12)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 36)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -588,6 +463,5 @@ struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
         LoginView()
             .environmentObject(QuestViewModel())
-            .environmentObject(ThemeManager.shared) // QuestModeBackground
     }
 }
