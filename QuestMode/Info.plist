@@ -3,16 +3,39 @@
 <plist version="1.0">
 <dict>
 	<key>QuestModeQuestBackendURL</key>
-	<string></string>
+	<string>https://questmode-cjdr.onrender.com</string>
 	<key>QuestModeUseFirebaseQuestProxy</key>
 	<false/>
 	<key>QuestModeFallbackFromProxyToDirectOpenAI</key>
-	<true/>
+	<false/>
 	<key>QuestModeFirebaseFunctionsRegion</key>
 	<string>us-central1</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Quest Mode needs camera access to capture photo proof for your quests.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Quest Mode needs photo library access so you can attach images to your quests.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Quest Mode uses the microphone so you can speak your goals during setup—we transcribe them to personalize your quests.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Quest Mode uses speech recognition to turn what you say into text during onboarding.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>QuestModePublicTermsURL</key>
+	<string></string>
+	<key>QuestModePublicPrivacyURL</key>
+	<string></string>
+	<key>QuestModeSupportEmail</key>
+	<string>support@questmode.app</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.kian.QuestMode</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>questmode</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
