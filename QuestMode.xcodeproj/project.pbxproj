@@ -49,6 +49,7 @@
 		9FF8D0E62F7B560000E32900 /* QuestModeRemoteAI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D0E52F7B560000E32900 /* QuestModeRemoteAI.swift */; };
 		9FF8D0E82F7B560000E32900 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 9FF8D0E72F7B560000E32900 /* FirebaseFunctions */; };
 		9FF8D0DA2F7B520000E32900 /* OpenAISecrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9FF8D0DB2F7B520000E32900 /* OpenAISecrets.plist */; };
+		9FF8D13A2FB0500000E32900 /* QuestModeAuthEmail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8D13B2FB0500000E32900 /* QuestModeAuthEmail.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -91,6 +92,7 @@
 		9FF8D0DE2F7B540000E32900 /* OpenAIAPIKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIAPIKeyStore.swift; sourceTree = "<group>"; };
 		9FF8D0E52F7B560000E32900 /* QuestModeRemoteAI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestModeRemoteAI.swift; sourceTree = "<group>"; };
 		9FF8D0DB2F7B520000E32900 /* OpenAISecrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = QuestMode/OpenAISecrets.plist; sourceTree = SOURCE_ROOT; };
+		9FF8D13B2FB0500000E32900 /* QuestModeAuthEmail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestModeAuthEmail.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -154,6 +156,7 @@
 				9FF8D0D72F79EF0000E32900 /* AIQuestGenerator.swift */,
 				9FF8D0DE2F7B540000E32900 /* OpenAIAPIKeyStore.swift */,
 				9FF8D0E52F7B560000E32900 /* QuestModeRemoteAI.swift */,
+				9FF8D13B2FB0500000E32900 /* QuestModeAuthEmail.swift */,
 				9FF8D0892F79E5C200E32900 /* MainTabView.swift */,
 				9FF8D08A2F79E5C200E32900 /* OnboardingView.swift */,
 				9FF8D08B2F79E5C200E32900 /* ProfileView.swift */,
@@ -298,6 +301,7 @@
 				9FF8D0D62F79EF0000E32900 /* AIQuestGenerator.swift in Sources */,
 				9FF8D0DF2F7B540000E32900 /* OpenAIAPIKeyStore.swift in Sources */,
 				9FF8D0E62F7B560000E32900 /* QuestModeRemoteAI.swift in Sources */,
+				9FF8D13A2FB0500000E32900 /* QuestModeAuthEmail.swift in Sources */,
 				9FF8D0B32F79E5C200E32900 /* AppAppearance.swift in Sources */,
 				9FF8D0B42F79E5C200E32900 /* ProfileView.swift in Sources */,
 				9FF8D0B52F79E5C200E32900 /* QuestLogEntry.swift in Sources */,

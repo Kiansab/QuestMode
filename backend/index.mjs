@@ -46,6 +46,100 @@ if (!process.env.OPENAI_API_KEY?.trim()) {
 const app = express();
 app.use(express.json({ limit: "512kb" }));
 
+/** Extract email domain from `Name <user@domain>` or bare `user@domain`. */
+function resendFromDomain() {
+  const m = RESEND_FROM.match(/@([A-Za-z0-9.-]+\.[A-Za-z]{2,})/);
+  return m?.[1]?.toLowerCase() || "";
+}
+
+function resendFromIsTestAddress() {
+  return resendFromDomain() === "resend.dev";
+}
+
+/**
+ * Resend only delivers broadly when FROM uses a verified domain (not resend.dev test mode).
+ * Cached briefly so /health and send-auth-email stay cheap.
+ */
+let resendReadyCache = { at: 0, value: null };
+
+async function getBrandedEmailStatus() {
+  const now = Date.now();
+  if (resendReadyCache.value && now - resendReadyCache.at < 60_000) {
+    return resendReadyCache.value;
+  }
+
+  const fromDomain = resendFromDomain();
+  const base = {
+    configured: Boolean(RESEND_API_KEY),
+    fromDomain: fromDomain || null,
+    fromIsTestAddress: resendFromIsTestAddress(),
+  };
+
+  if (!RESEND_API_KEY) {
+    const value = {
+      ...base,
+      ready: false,
+      reason: "RESEND_API_KEY missing",
+    };
+    resendReadyCache = { at: now, value };
+    return value;
+  }
+
+  if (resendFromIsTestAddress()) {
+    // onboarding@resend.dev only delivers to the Resend account owner.
+    const value = {
+      ...base,
+      ready: false,
+      reason:
+        "RESEND_FROM uses resend.dev (test mode) — only the Resend account owner can receive mail; app should use Firebase fallback",
+    };
+    resendReadyCache = { at: now, value };
+    return value;
+  }
+
+  try {
+    const r = await fetch("https://api.resend.com/domains", {
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}` },
+    });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const value = {
+        ...base,
+        ready: false,
+        reason: body?.message || `Resend domains API failed (${r.status})`,
+      };
+      resendReadyCache = { at: now, value };
+      return value;
+    }
+    const domains = Array.isArray(body?.data) ? body.data : [];
+    const match = domains.find(
+      (d) => String(d?.name || "").toLowerCase() === fromDomain
+    );
+    const status = String(match?.status || "").toLowerCase();
+    const verified = status === "verified";
+    const value = {
+      ...base,
+      ready: verified,
+      domainStatus: match ? status : "missing",
+      reason: verified
+        ? "ok"
+        : match
+          ? `Domain ${fromDomain} status is "${status}" (need verified) — add Resend DNS records`
+          : `Domain ${fromDomain} not found in Resend — add it and complete DNS, or set RESEND_FROM to Quest Mode <onboarding@resend.dev> for owner-only tests`,
+    };
+    resendReadyCache = { at: now, value };
+    return value;
+  } catch (e) {
+    const value = {
+      ...base,
+      ready: false,
+      reason: e?.message || "Resend domain check failed",
+    };
+    resendReadyCache = { at: now, value };
+    return value;
+  }
+}
+
 async function verifyBearer(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
@@ -68,6 +162,16 @@ async function sendResendEmail({ to, subject, html }) {
     err.status = 503;
     throw err;
   }
+
+  // Fail fast when domain/DNS isn't ready so the iOS app falls back to Firebase Auth mail.
+  const status = await getBrandedEmailStatus();
+  if (!status.ready) {
+    const err = new Error(status.reason || "Branded email not ready");
+    err.status = 503;
+    err.code = "branded_email_not_ready";
+    throw err;
+  }
+
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -98,14 +202,41 @@ app.get("/", (_req, res) => {
   });
 });
 
-app.get("/health", (_req, res) => {
+/** Post-verify landing (optional AUTH_CONTINUE_URL). Must be on Firebase authorized domains if used. */
+app.get("/auth/verified", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(`<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Email verified — Quest Mode</title>
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0d0d0f;color:#e0e0e4;text-align:center;padding:24px;}
+h1{font-size:1.6rem;margin:0 0 12px;letter-spacing:-0.03em;}
+p{color:#8a8a90;line-height:1.5;margin:0;max-width:28rem;}
+</style></head><body>
+<div>
+  <h1>You're verified</h1>
+  <p>Return to Quest Mode — it will unlock automatically. You can close this tab.</p>
+</div>
+</body></html>`);
+});
+
+app.get("/health", async (_req, res) => {
   const key = process.env.OPENAI_API_KEY?.trim() || "";
   const openaiKeyPresent = Boolean(key);
   // sk- = OpenAI secret; re_ = Resend (wrong env paste) — never echo the key.
   const openaiKeyLooksValid = key.startsWith("sk-");
+  const branded = await getBrandedEmailStatus();
   res.json({
     ok: true,
     brandedEmail: Boolean(RESEND_API_KEY),
+    brandedEmailReady: branded.ready,
+    brandedEmailFromDomain: branded.fromDomain,
+    brandedEmailFromIsTestAddress: branded.fromIsTestAddress,
+    brandedEmailDomainStatus: branded.domainStatus || null,
+    brandedEmailReason: branded.reason,
+    authContinueUrl: AUTH_CONTINUE_URL,
     openaiKeyPresent,
     openaiKeyLooksValid,
   });
@@ -211,7 +342,10 @@ app.post("/v1/send-auth-email", async (req, res) => {
     return res.json({ ok: true, uidHint: Boolean(user) });
   } catch (e) {
     console.error(e);
-    return res.status(e.status || 502).json({ error: e.message || "Email send failed" });
+    return res.status(e.status || 502).json({
+      error: e.message || "Email send failed",
+      code: e.code || undefined,
+    });
   }
 });
 

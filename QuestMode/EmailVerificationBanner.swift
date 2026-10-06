@@ -21,7 +21,7 @@ struct EmailVerificationBanner: View {
                     }
                     Spacer(minLength: 8)
                     Button("Resend") {
-                        user.sendEmailVerification(completion: nil)
+                        QuestModeAuthEmail.sendVerification(completion: nil)
                     }
                     .font(.caption)
                     .fontWeight(.semibold)

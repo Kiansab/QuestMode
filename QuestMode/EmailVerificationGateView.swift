@@ -8,7 +8,9 @@ struct EmailVerificationGateView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var isChecking = false
+    @State private var isSending = false
     @State private var statusMessage: String?
+    @State private var didAutoSend = false
 
     private let timer = Timer.publish(every: 4, on: .main, in: .common).autoconnect()
 
@@ -38,7 +40,7 @@ struct EmailVerificationGateView: View {
                             .foregroundStyle(AppTheme.AuthFlow.textPrimary)
                             .multilineTextAlignment(.center)
 
-                        Text("We sent a secure link to unlock your account. Tap the link in that email, then return here.")
+                        Text("We sent a secure link to unlock your account. Tap the link in that email, then return here. Check Junk/Spam if you don’t see it (common on Hotmail/Outlook).")
                             .font(.subheadline)
                             .foregroundStyle(AppTheme.AuthFlow.textSecondary)
                             .multilineTextAlignment(.center)
@@ -95,17 +97,12 @@ struct EmailVerificationGateView: View {
                     .accessibilityLabel("Continue after verifying email")
 
                     Button {
-                        Auth.auth().currentUser?.sendEmailVerification { error in
-                            if let error = error {
-                                statusMessage = error.localizedDescription
-                            } else {
-                                statusMessage = nil
-                            }
-                        }
+                        resend(isAutomatic: false)
                     } label: {
-                        Text("Resend verification email")
+                        Text(isSending ? "Sending…" : "Resend verification email")
                             .fontWeight(.semibold)
                     }
+                    .disabled(isSending)
                     .foregroundStyle(AppTheme.AuthFlow.accent)
 
                     Button(role: .destructive) {
@@ -138,6 +135,11 @@ struct EmailVerificationGateView: View {
         }
         .onAppear {
             checkVerification(manual: false)
+            // Sign-in of an unverified account used to show this gate with no new email.
+            if !didAutoSend {
+                didAutoSend = true
+                resend(isAutomatic: true)
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
@@ -146,10 +148,34 @@ struct EmailVerificationGateView: View {
         }
     }
 
+    private func resend(isAutomatic: Bool = false) {
+        guard !isSending else { return }
+        isSending = true
+        QuestModeAuthEmail.sendVerification { error in
+            DispatchQueue.main.async {
+                isSending = false
+                if let error {
+                    statusMessage = isAutomatic
+                        ? "Couldn’t send yet — tap Resend verification email. Also check Junk/Spam."
+                        : error.localizedDescription
+                } else {
+                    statusMessage = nil
+                }
+            }
+        }
+    }
+
     private func checkVerification(manual: Bool) {
+        guard Auth.auth().currentUser != nil else { return }
         if manual { isChecking = true }
-        viewModel.refreshAuthUser { [manual] in
-            if manual { isChecking = false }
+        viewModel.refreshAuthUser {
+            isChecking = false
+            let verified = viewModel.isCurrentUserEmailVerified
+            if manual && !verified {
+                statusMessage = "Not verified yet — tap the link in your inbox (check Junk/Spam)."
+            } else if verified {
+                statusMessage = nil
+            }
         }
     }
 }
