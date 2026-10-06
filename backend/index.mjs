@@ -99,7 +99,52 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, brandedEmail: Boolean(RESEND_API_KEY) });
+  const key = process.env.OPENAI_API_KEY?.trim() || "";
+  const openaiKeyPresent = Boolean(key);
+  // sk- = OpenAI secret; re_ = Resend (wrong env paste) — never echo the key.
+  const openaiKeyLooksValid = key.startsWith("sk-");
+  res.json({
+    ok: true,
+    brandedEmail: Boolean(RESEND_API_KEY),
+    openaiKeyPresent,
+    openaiKeyLooksValid,
+  });
+});
+
+/** Tiny authenticated OpenAI smoke test — confirms the server key can chat. */
+app.get("/health/openai", async (req, res) => {
+  try {
+    await verifyBearer(req);
+  } catch (e) {
+    return res.status(e.status || 401).json({ error: e.message });
+  }
+  const key = process.env.OPENAI_API_KEY?.trim() || "";
+  if (!key) {
+    return res.status(503).json({ ok: false, error: "OPENAI_API_KEY missing" });
+  }
+  if (!key.startsWith("sk-")) {
+    return res.status(503).json({
+      ok: false,
+      error: "OPENAI_API_KEY does not look like an OpenAI secret key (should start with sk-)",
+    });
+  }
+  try {
+    const chat = await openai.chat.completions.create({
+      model: MODEL,
+      temperature: 0,
+      max_tokens: 8,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: "Reply with JSON only." },
+        { role: "user", content: 'Return {"ok":true}' },
+      ],
+    });
+    const content = chat.choices[0]?.message?.content?.trim() || "";
+    return res.json({ ok: true, sample: content.slice(0, 80) });
+  } catch (e) {
+    console.error(e);
+    return res.status(502).json({ ok: false, error: e?.message || "OpenAI request failed" });
+  }
 });
 
 /**
