@@ -22,7 +22,9 @@ import { verificationEmailHTML, passwordResetEmailHTML } from "./emailTemplates.
 const MODEL = "gpt-4o-mini";
 const PORT = process.env.PORT || 8787;
 const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || "";
-const RESEND_FROM = process.env.RESEND_FROM?.trim() || "Quest Mode <onboarding@resend.dev>";
+/** Production FROM — never default to resend.dev (owner-only test mode). */
+const RESEND_FROM =
+  process.env.RESEND_FROM?.trim() || "Quest Mode <noreply@questmode.app>";
 const AUTH_CONTINUE_URL =
   process.env.AUTH_CONTINUE_URL?.trim() || "https://questmode-298cc.firebaseapp.com";
 
@@ -79,19 +81,19 @@ async function getBrandedEmailStatus() {
     const value = {
       ...base,
       ready: false,
-      reason: "RESEND_API_KEY missing",
+      reason: "NOT PRODUCTION-READY: RESEND_API_KEY missing on Render",
     };
     resendReadyCache = { at: now, value };
     return value;
   }
 
   if (resendFromIsTestAddress()) {
-    // onboarding@resend.dev only delivers to the Resend account owner.
+    // resend.dev only delivers to the Resend account owner — not launch-ready.
     const value = {
       ...base,
       ready: false,
       reason:
-        "RESEND_FROM uses resend.dev (test mode) — only the Resend account owner can receive mail; app should use Firebase fallback",
+        "NOT PRODUCTION-READY: RESEND_FROM uses resend.dev (owner-only test mode). Set RESEND_FROM=Quest Mode <noreply@questmode.app> after questmode.app is Verified in Resend, then redeploy",
     };
     resendReadyCache = { at: now, value };
     return value;
@@ -124,8 +126,8 @@ async function getBrandedEmailStatus() {
       reason: verified
         ? "ok"
         : match
-          ? `Domain ${fromDomain} status is "${status}" (need verified) — add Resend DNS records`
-          : `Domain ${fromDomain} not found in Resend — add it and complete DNS, or set RESEND_FROM to Quest Mode <onboarding@resend.dev> for owner-only tests`,
+          ? `NOT PRODUCTION-READY: Domain ${fromDomain} status is "${status}" (need verified) — add Resend DNS at Vercel, wait for Verified`
+          : `NOT PRODUCTION-READY: Domain ${fromDomain} not found in Resend — add questmode.app, complete DNS at Vercel, then set RESEND_FROM=Quest Mode <noreply@questmode.app>`,
     };
     resendReadyCache = { at: now, value };
     return value;
@@ -163,6 +165,17 @@ async function sendResendEmail({ to, subject, html }) {
     throw err;
   }
 
+  const branded = await getBrandedEmailStatus();
+  if (!branded.ready) {
+    const err = new Error(
+      branded.reason ||
+        "Branded email is not production-ready (brandedEmailReady=false). Verify questmode.app in Resend and set RESEND_FROM."
+    );
+    err.status = 503;
+    err.code = "branded_email_not_ready";
+    throw err;
+  }
+
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -187,11 +200,13 @@ async function sendResendEmail({ to, subject, html }) {
   return body;
 }
 
-app.get("/", (_req, res) => {
+app.get("/", async (_req, res) => {
+  const branded = await getBrandedEmailStatus();
   res.json({
     ok: true,
     hint: "Use GET /health, POST /v1/quest-chat, or POST /v1/send-auth-email",
     brandedEmail: Boolean(RESEND_API_KEY),
+    brandedEmailReady: branded.ready,
   });
 });
 
@@ -224,11 +239,15 @@ app.get("/health", async (_req, res) => {
   res.json({
     ok: true,
     brandedEmail: Boolean(RESEND_API_KEY),
+    /** true only when FROM domain is Verified in Resend — safe for every inbox */
     brandedEmailReady: branded.ready,
+    brandedEmailFrom: RESEND_FROM,
     brandedEmailFromDomain: branded.fromDomain,
     brandedEmailFromIsTestAddress: branded.fromIsTestAddress,
     brandedEmailDomainStatus: branded.domainStatus || null,
     brandedEmailReason: branded.reason,
+    /** Explicit launch gate: do not ship auth email until this is true */
+    productionEmailReady: branded.ready,
     authContinueUrl: AUTH_CONTINUE_URL,
     openaiKeyPresent,
     openaiKeyLooksValid,
@@ -401,6 +420,12 @@ app.post("/v1/quest-chat", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Quest Mode backend listening on ${PORT} (brandedEmail=${Boolean(RESEND_API_KEY)})`);
+app.listen(PORT, async () => {
+  const branded = await getBrandedEmailStatus();
+  console.log(
+    `Quest Mode backend listening on ${PORT} (brandedEmail=${Boolean(RESEND_API_KEY)} brandedEmailReady=${branded.ready})`
+  );
+  if (!branded.ready) {
+    console.warn(`[email] NOT PRODUCTION-READY: ${branded.reason}`);
+  }
 });

@@ -47,16 +47,18 @@ enum QuestModeAuthEmail {
     private static func friendly(_ error: Error) -> Error {
         let ns = error as NSError
         let raw = (ns.localizedDescription).lowercased()
-        if raw.contains("resend.dev") || raw.contains("only send testing") || raw.contains("own email") {
+        if raw.contains("resend.dev") || raw.contains("only send testing") || raw.contains("own email")
+            || raw.contains("not production-ready") || raw.contains("branded_email_not_ready")
+            || raw.contains("brandedemailready") {
             return NSError(domain: "QuestModeAuthEmail", code: ns.code, userInfo: [
                 NSLocalizedDescriptionKey:
-                    "Branded mail isn’t set up for every inbox yet. Finish questmode.app in Resend (DNS), set RESEND_FROM to noreply@questmode.app on Render, then Resend."
+                    "Email isn’t ready for all users yet. Verify questmode.app in Resend (DNS at Vercel), set RESEND_FROM to noreply@questmode.app on Render, redeploy, then try again."
             ])
         }
         if raw.contains("not configured") || raw.contains("missing") || ns.code == 503 {
             return NSError(domain: "QuestModeAuthEmail", code: ns.code, userInfo: [
                 NSLocalizedDescriptionKey:
-                    "Verification email service isn’t ready. Check Resend + Render (RESEND_API_KEY / RESEND_FROM)."
+                    "Verification email service isn’t ready. Check Resend + Render (RESEND_API_KEY / RESEND_FROM=noreply@questmode.app)."
             ])
         }
         return ns

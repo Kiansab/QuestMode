@@ -4,50 +4,54 @@ WHAT THIS IS
   Small Node server. You host it on Railway, Fly.io, Render, a VPS, etc.
   You put OPENAI_API_KEY on the server. The app sends prompts + the user’s Firebase login token.
   The server checks the token, then calls OpenAI.
+  Auth emails (verify + password reset) are sent via Resend only — Firebase does not send mail.
 
 WHAT YOU NEED
   1) Node 20+
-  2) OpenAI API key (your $5 credit is fine)
+  2) OpenAI API key
   3) Firebase “service account” JSON (free) — Firebase Console → Project settings → Service accounts → Generate new private key
      Paste the whole JSON as one line into env FIREBASE_SERVICE_ACCOUNT_JSON on your host (or use file path locally with GOOGLE_APPLICATION_CREDENTIALS)
+  4) Resend API key + verified sending domain (required for launch email to everyone)
 
 LOCAL TEST
   1) cd backend && npm install
   2) export OPENAI_API_KEY="sk-..."
      export FIREBASE_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'   # full JSON, one line
+     export RESEND_API_KEY="re_..."
+     export RESEND_FROM="Quest Mode <noreply@questmode.app>"
      node index.mjs
-  3) curl -s http://127.0.0.1:8787/health   → {"ok":true}
+  3) curl -s http://127.0.0.1:8787/health   → brandedEmailReady should be true only after Resend domain Verified
 
-DEPLOY (Railway — simple)
-  1) Push this repo to GitHub (or connect local folder if Railway supports it).
-  2) railway.app → New Project → Deploy from GitHub → pick repo.
-  3) Project → Settings → set Root Directory to: backend
-     (Or deploy only the backend folder.)
-  4) Variables tab — add:
+DEPLOY (Render / Railway)
+  1) Push this repo / connect the backend folder as the service root.
+  2) Variables tab — add:
        OPENAI_API_KEY = sk-...
-       FIREBASE_SERVICE_ACCOUNT_JSON = paste entire service account JSON (Railway accepts multi-line in the value)
-       RESEND_API_KEY = re_...          # optional — branded verification / reset emails
-       RESEND_FROM = Quest Mode <onboarding@resend.dev>   # or noreply@yourdomain after Resend domain verify
-  5) If the service uses Docker: Dockerfile is in backend/. Or turn off Docker and use Nixpacks:
-       Build = npm ci, Start = npm start (package.json "start" runs node index.mjs).
-  6) Deploy → copy the public HTTPS URL (e.g. https://something.up.railway.app).
-  7) Browser: https://YOUR_URL/health → {"ok":true}
+       FIREBASE_SERVICE_ACCOUNT_JSON = paste entire service account JSON
+       RESEND_API_KEY = re_...
+       RESEND_FROM = Quest Mode <noreply@questmode.app>
+       AUTH_CONTINUE_URL = https://questmode-298cc.firebaseapp.com
+  3) Domain must be Verified in Resend first (DNS at Vercel for questmode.app).
+     See Docs/Firebase-Email-Templates.md — production checklist.
+     Do NOT use @resend.dev addresses for launch (owner-only test mode).
+  4) Deploy → open https://YOUR_URL/health
+     Expect brandedEmailReady: true and productionEmailReady: true
 
 XCODE AFTER DEPLOY
   1) Open QuestMode/Info.plist
-  2) Set QuestModeQuestBackendURL to that base URL only (no path, optional no trailing slash), e.g. https://something.up.railway.app
-  3) QuestModeUseFirebaseQuestProxy = NO (you are using this server, not Cloud Functions).
-  4) Users must be signed in with Firebase Auth — the app sends their ID token to the backend.
+  2) Set QuestModeQuestBackendURL to that base URL only (no path), e.g. https://questmode-cjdr.onrender.com
+  3) QuestModeUseFirebaseQuestProxy = NO
+  4) QuestModeFallbackFromProxyToDirectOpenAI = NO  (production: server key only)
+  5) Users must be signed in with Firebase Auth — the app sends their ID token to the backend.
 
 OPTIONAL: Docker build locally
-  cd backend && docker build -t questmode-api . && docker run --rm -p 8787:8787 -e PORT=8787 -e OPENAI_API_KEY=... -e FIREBASE_SERVICE_ACCOUNT_JSON='...' questmode-api
+  cd backend && docker build -t questmode-api . && docker run --rm -p 8787:8787 -e PORT=8787 -e OPENAI_API_KEY=... -e FIREBASE_SERVICE_ACCOUNT_JSON='...' -e RESEND_API_KEY=... -e RESEND_FROM='Quest Mode <noreply@questmode.app>' questmode-api
   Note: hosts usually set PORT automatically; do not hardcode 8787 in production.
 
 APP SETTINGS (Info.plist)
   QuestModeQuestBackendURL = https://your-server.example
   QuestModeUseFirebaseQuestProxy = NO
-  QuestModeFallbackFromProxyToDirectOpenAI = YES  (lets you use Profile key if server is down)
+  QuestModeFallbackFromProxyToDirectOpenAI = NO
 
 SECURITY
-  Never commit OPENAI_API_KEY or service account JSON to git.
+  Never commit OPENAI_API_KEY, RESEND_API_KEY, or service account JSON to git.
   Use HTTPS only in production.
