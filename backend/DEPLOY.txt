@@ -26,6 +26,8 @@ DEPLOY (Railway — simple)
   4) Variables tab — add:
        OPENAI_API_KEY = sk-...
        FIREBASE_SERVICE_ACCOUNT_JSON = paste entire service account JSON (Railway accepts multi-line in the value)
+       RESEND_API_KEY = re_...          # optional — branded verification / reset emails
+       RESEND_FROM = Quest Mode <onboarding@resend.dev>   # or noreply@yourdomain after Resend domain verify
   5) If the service uses Docker: Dockerfile is in backend/. Or turn off Docker and use Nixpacks:
        Build = npm ci, Start = npm start (package.json "start" runs node index.mjs).
   6) Deploy → copy the public HTTPS URL (e.g. https://something.up.railway.app).

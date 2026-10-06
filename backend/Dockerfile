@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY index.mjs ./
+COPY index.mjs emailTemplates.mjs ./
 
 ENV NODE_ENV=production
 EXPOSE 8787
