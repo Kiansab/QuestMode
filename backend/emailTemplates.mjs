@@ -34,23 +34,15 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="supported-color-schemes" content="light dark" />
+  <meta name="color-scheme" content="dark only" />
+  <meta name="supported-color-schemes" content="dark" />
   <title>${escapeHtml(title)}</title>
   <style>
-    @media (prefers-color-scheme: light) {
-      .vlix-bg { background:#f4f4f5 !important; }
-      .vlix-card { background:#ffffff !important; border-color:rgba(0,0,0,.08) !important; }
-      .vlix-title { color:#141416 !important; }
-      .vlix-muted { color:#5c5c62 !important; }
-      .vlix-eyebrow { color:#6e6e74 !important; }
-      .vlix-btn { background:#141416 !important; color:#f4f4f5 !important; }
-      .vlix-link { color:#3a3a40 !important; }
-    }
+    :root { color-scheme: dark only; }
   </style>
 </head>
-<body class="vlix-bg" style="margin:0;padding:0;background:#0d0d0f;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <table class="vlix-bg" role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0d0d0f;padding:48px 16px;">
+<body class="vlix-bg" bgcolor="#0d0d0f" style="margin:0;padding:0;background:#0d0d0f;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table class="vlix-bg" role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#0d0d0f" style="background:#0d0d0f;padding:48px 16px;">
     <tr>
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:440px;">
@@ -60,7 +52,7 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
             </td>
           </tr>
           <tr>
-            <td class="vlix-card" style="background:#1a1a1c;border-radius:22px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
+            <td class="vlix-card" bgcolor="#1a1a1c" style="background:#1a1a1c;border-radius:22px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="height:3px;background:linear-gradient(90deg,#c8c8ce 0%,#6e6e74 100%);font-size:0;line-height:0;">&nbsp;</td>
