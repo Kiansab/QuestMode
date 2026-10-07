@@ -1,24 +1,24 @@
 /**
- * Quest Mode branded auth emails (dark graphite + soft white — matches app chrome).
+ * Vlix branded auth emails (dark graphite + soft white — matches app chrome).
  */
 
 export function verificationEmailHTML({ displayName, verifyUrl }) {
   const hello = displayName?.trim()
     ? `Hi ${escapeHtml(displayName.trim().split(/\s+/)[0])},`
-    : "Welcome to Quest Mode.";
+    : "Welcome to Vlix.";
   return layout({
-    eyebrow: "Quest Mode",
+    eyebrow: "Vlix",
     title: "Verify your email",
-    lead: `${hello} One tap confirms it’s you — then we build daily quests around your real goals.`,
+    lead: `${hello} One tap confirms it’s you — then we build daily habits around your real goals.`,
     ctaLabel: "Verify email",
     ctaUrl: verifyUrl,
-    footnote: "If you didn’t create a Quest Mode account, you can ignore this message.",
+    footnote: "If you didn’t create a Vlix account, you can ignore this message.",
   });
 }
 
 export function passwordResetEmailHTML({ resetUrl }) {
   return layout({
-    eyebrow: "Quest Mode",
+    eyebrow: "Vlix",
     title: "Reset your password",
     lead: "Tap below to choose a new password. If you didn’t ask for this, you can ignore the email.",
     ctaLabel: "Reset password",
@@ -87,13 +87,78 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
           </tr>
           <tr>
             <td style="padding:24px 8px 0;text-align:center;color:#45454a;font-size:11px;line-height:1.5;">
-              Daily quests for your real goals.
+              Daily habits for your real goals.
             </td>
           </tr>
         </table>
       </td>
     </tr>
   </table>
+</body>
+</html>`;
+}
+
+/** Dark page that matches the app. Confirm button posts so inbox scanners don't verify by opening the link. */
+export function verifyConfirmPageHTML({ code, apiKey }) {
+  return authPage({
+    title: "Verify your email",
+    lead: "One tap confirms this address. Then go back to Vlix — it unlocks on its own.",
+    body: `<form method="post" action="/auth/verify">
+      <input type="hidden" name="code" value="${escapeAttr(code)}"/>
+      <input type="hidden" name="apiKey" value="${escapeAttr(apiKey)}"/>
+      <button type="submit">Verify email</button>
+    </form>`,
+  });
+}
+
+export function verifySuccessPageHTML() {
+  return authPage({
+    title: "You're verified",
+    lead: "Go back to Vlix. It will let you in on its own. You can close this page.",
+  });
+}
+
+export function verifyErrorPageHTML(message) {
+  return authPage({
+    title: "Link didn't work",
+    lead: message || "This link expired. Go back to Vlix and tap Resend email.",
+  });
+}
+
+function authPage({ title, lead, body = "" }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="dark"/>
+  <title>${escapeHtml(title)} — Vlix</title>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:#0d0d0f;color:#e0e0e4;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      padding:24px;text-align:center;}
+    .card{width:100%;max-width:420px;background:#161618;border:1px solid rgba(255,255,255,.08);
+      border-radius:22px;overflow:hidden;}
+    .bar{height:3px;background:linear-gradient(90deg,#c8c8ce,#6e6e74);}
+    .pad{padding:36px 28px 32px;}
+    .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8a8a90;font-weight:600;margin-bottom:18px;}
+    h1{margin:0 0 12px;font-size:28px;letter-spacing:-.03em;font-weight:700;}
+    p{margin:0;color:#8a8a90;line-height:1.55;font-size:15px;}
+    button{margin-top:28px;border:0;background:#e0e0e4;color:#141416;font-weight:700;font-size:16px;
+      padding:15px 32px;border-radius:999px;cursor:pointer;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="bar"></div>
+    <div class="pad">
+      <div class="eyebrow">Vlix</div>
+      <h1>${escapeHtml(title)}</h1>
+      <p>${escapeHtml(lead)}</p>
+      ${body}
+    </div>
+  </div>
 </body>
 </html>`;
 }

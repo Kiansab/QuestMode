@@ -1,5 +1,5 @@
 /**
- * Quest Mode — tiny API for one OpenAI key on YOUR server (no Firebase Blaze).
+ * Vlix — tiny API for one OpenAI key on YOUR server (no Firebase Blaze).
  *
  * Env:
  *   OPENAI_API_KEY          — your secret key from OpenAI
@@ -17,16 +17,25 @@
 import express from "express";
 import admin from "firebase-admin";
 import OpenAI from "openai";
-import { verificationEmailHTML, passwordResetEmailHTML } from "./emailTemplates.mjs";
+import {
+  verificationEmailHTML,
+  passwordResetEmailHTML,
+  verifyConfirmPageHTML,
+  verifySuccessPageHTML,
+  verifyErrorPageHTML,
+} from "./emailTemplates.mjs";
 
 const MODEL = "gpt-4o-mini";
 const PORT = process.env.PORT || 8787;
 const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || "";
 /** Production FROM — never default to resend.dev (owner-only test mode). */
 const RESEND_FROM =
-  process.env.RESEND_FROM?.trim() || "Quest Mode <noreply@questmode.app>";
+  process.env.RESEND_FROM?.trim() || "Vlix <noreply@vlix.app>";
 const AUTH_CONTINUE_URL =
-  process.env.AUTH_CONTINUE_URL?.trim() || "https://questmode-298cc.firebaseapp.com";
+  process.env.AUTH_CONTINUE_URL?.trim() || "https://vlix-298cc.firebaseapp.com";
+const PUBLIC_BASE = (
+  process.env.PUBLIC_BASE_URL || "https://vlix-cjdr.onrender.com"
+).replace(/\/$/, "");
 
 if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
   admin.initializeApp({
@@ -93,7 +102,7 @@ async function getBrandedEmailStatus() {
       ...base,
       ready: false,
       reason:
-        "NOT PRODUCTION-READY: RESEND_FROM uses resend.dev (owner-only test mode). Set RESEND_FROM=Quest Mode <noreply@questmode.app> after questmode.app is Verified in Resend, then redeploy",
+        "NOT PRODUCTION-READY: RESEND_FROM uses resend.dev (owner-only test mode). Set RESEND_FROM=Vlix <noreply@vlix.app> after vlix.app is Verified in Resend, then redeploy",
     };
     resendReadyCache = { at: now, value };
     return value;
@@ -127,7 +136,7 @@ async function getBrandedEmailStatus() {
         ? "ok"
         : match
           ? `NOT PRODUCTION-READY: Domain ${fromDomain} status is "${status}" (need verified) — add Resend DNS at Vercel, wait for Verified`
-          : `NOT PRODUCTION-READY: Domain ${fromDomain} not found in Resend — add questmode.app, complete DNS at Vercel, then set RESEND_FROM=Quest Mode <noreply@questmode.app>`,
+          : `NOT PRODUCTION-READY: Domain ${fromDomain} not found in Resend — add vlix.app, complete DNS at Vercel, then set RESEND_FROM=Vlix <noreply@vlix.app>`,
     };
     resendReadyCache = { at: now, value };
     return value;
@@ -169,7 +178,7 @@ async function sendResendEmail({ to, subject, html }) {
   if (!branded.ready) {
     const err = new Error(
       branded.reason ||
-        "Branded email is not production-ready (brandedEmailReady=false). Verify questmode.app in Resend and set RESEND_FROM."
+        "Branded email is not production-ready (brandedEmailReady=false). Verify vlix.app in Resend and set RESEND_FROM."
     );
     err.status = 503;
     err.code = "branded_email_not_ready";
@@ -210,24 +219,64 @@ app.get("/", async (_req, res) => {
   });
 });
 
-/** Post-verify landing (optional AUTH_CONTINUE_URL). Must be on Firebase authorized domains if used. */
-app.get("/auth/verified", (_req, res) => {
+function html(res, body) {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.send(`<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Email verified — Quest Mode</title>
-<style>
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0d0d0f;color:#e0e0e4;text-align:center;padding:24px;}
-h1{font-size:1.6rem;margin:0 0 12px;letter-spacing:-0.03em;}
-p{color:#8a8a90;line-height:1.5;margin:0;max-width:28rem;}
-</style></head><body>
-<div>
-  <h1>You're verified</h1>
-  <p>Return to Quest Mode — it will unlock automatically. You can close this tab.</p>
-</div>
-</body></html>`);
+  res.send(body);
+}
+
+/** Pull the one-time code out of Firebase's link so the email never opens Firebase's page. */
+function vlixVerifyUrl(firebaseLink) {
+  const params = new URL(firebaseLink).searchParams;
+  const code = params.get("oobCode") || "";
+  const apiKey = params.get("apiKey") || "";
+  const url = new URL("/auth/verify", PUBLIC_BASE);
+  url.searchParams.set("code", code);
+  url.searchParams.set("key", apiKey);
+  return url.toString();
+}
+
+app.get("/auth/verify", (req, res) => {
+  const code = String(req.query.code || "");
+  const apiKey = String(req.query.key || "");
+  if (!code || !apiKey) {
+    return html(res, verifyErrorPageHTML("This link is incomplete. Go back to Vlix and tap Resend email."));
+  }
+  html(res, verifyConfirmPageHTML({ code, apiKey }));
+});
+
+app.post("/auth/verify", express.urlencoded({ extended: false }), async (req, res) => {
+  const code = String(req.body?.code || "");
+  const apiKey = String(req.body?.apiKey || "");
+  if (!code || !apiKey) {
+    return html(res, verifyErrorPageHTML("This link is incomplete. Go back to Vlix and tap Resend email."));
+  }
+  try {
+    const r = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oobCode: code }),
+      }
+    );
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const message = String(body?.error?.message || "");
+      if (message === "INVALID_OOB_CODE" || message === "EXPIRED_OOB_CODE") {
+        return html(res, verifyErrorPageHTML("This link expired. Go back to Vlix and tap Resend email."));
+      }
+      console.error("verify action failed", message || r.status);
+      return html(res, verifyErrorPageHTML("Couldn't verify that link. Go back to Vlix and tap Resend email."));
+    }
+    return html(res, verifySuccessPageHTML());
+  } catch (e) {
+    console.error(e);
+    return html(res, verifyErrorPageHTML("Couldn't verify that link. Go back to Vlix and tap Resend email."));
+  }
+});
+
+app.get("/auth/verified", (_req, res) => {
+  html(res, verifySuccessPageHTML());
 });
 
 app.get("/health", async (_req, res) => {
@@ -291,7 +340,7 @@ app.get("/health/openai", async (req, res) => {
 });
 
 /**
- * Branded auth emails (Quest Mode UI). Requires RESEND_API_KEY.
+ * Branded auth emails (Vlix UI). Requires RESEND_API_KEY.
  * Body: { "kind": "verify" | "password_reset", "email"?: string }
  * - verify: caller must be signed in; email defaults to token email
  * - password_reset: email required (no auth) — rate-limited lightly by requiring a known user
@@ -319,10 +368,10 @@ app.post("/v1/send-auth-email", async (req, res) => {
       });
       await sendResendEmail({
         to: email,
-        subject: "Verify your Quest Mode email",
+        subject: "Verify your Vlix email",
         html: verificationEmailHTML({
           displayName: user.displayName || "",
-          verifyUrl: link,
+          verifyUrl: vlixVerifyUrl(link),
         }),
       });
       return res.json({ ok: true });
@@ -348,7 +397,7 @@ app.post("/v1/send-auth-email", async (req, res) => {
     });
     await sendResendEmail({
       to: email,
-      subject: "Reset your Quest Mode password",
+      subject: "Reset your Vlix password",
       html: passwordResetEmailHTML({ resetUrl: link }),
     });
     return res.json({ ok: true, uidHint: Boolean(user) });
@@ -423,7 +472,7 @@ app.post("/v1/quest-chat", async (req, res) => {
 app.listen(PORT, async () => {
   const branded = await getBrandedEmailStatus();
   console.log(
-    `Quest Mode backend listening on ${PORT} (brandedEmail=${Boolean(RESEND_API_KEY)} brandedEmailReady=${branded.ready})`
+    `Vlix backend listening on ${PORT} (brandedEmail=${Boolean(RESEND_API_KEY)} brandedEmailReady=${branded.ready})`
   );
   if (!branded.ready) {
     console.warn(`[email] NOT PRODUCTION-READY: ${branded.reason}`);
