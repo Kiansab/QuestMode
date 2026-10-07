@@ -49,7 +49,7 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
     }
   </style>
 </head>
-<body class="vlix-bg" style="margin:0;padding:0;background:#0d0d0f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<body class="vlix-bg" style="margin:0;padding:0;background:#0d0d0f;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
   <table class="vlix-bg" role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0d0d0f;padding:48px 16px;">
     <tr>
       <td align="center">
@@ -60,14 +60,14 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
             </td>
           </tr>
           <tr>
-            <td class="vlix-card" style="background:#161618;border-radius:22px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
+            <td class="vlix-card" style="background:#1a1a1c;border-radius:22px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="height:3px;background:linear-gradient(90deg,#c8c8ce 0%,#6e6e74 100%);font-size:0;line-height:0;">&nbsp;</td>
                 </tr>
                 <tr>
                   <td style="padding:36px 32px 8px;text-align:center;">
-                    <h1 class="vlix-title" style="margin:0;font-size:28px;line-height:1.2;color:#e0e0e4;font-weight:700;letter-spacing:-0.03em;">${escapeHtml(title)}</h1>
+                    <h1 class="vlix-title" style="margin:0;font-size:28px;line-height:1.2;color:#f5f5f7;font-weight:700;letter-spacing:-0.03em;">${escapeHtml(title)}</h1>
                   </td>
                 </tr>
                 <tr>
@@ -77,7 +77,7 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
                 </tr>
                 <tr>
                   <td align="center" style="padding:0 32px 36px;">
-                    <a class="vlix-btn" href="${safeUrl}" style="display:inline-block;background:#e0e0e4;color:#141416;text-decoration:none;font-weight:700;font-size:16px;padding:15px 32px;border-radius:999px;letter-spacing:-0.01em;">
+                    <a class="vlix-btn" href="${safeUrl}" style="display:inline-block;background:#e0e0e6;color:#141416;text-decoration:none;font-weight:700;font-size:16px;padding:15px 32px;border-radius:999px;letter-spacing:-0.01em;">
                       ${escapeHtml(ctaLabel)}
                     </a>
                   </td>
@@ -110,63 +110,65 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
 }
 
 /** Dark page that matches the app. Confirm button posts so inbox scanners don't verify by opening the link. */
-export function verifyConfirmPageHTML({ code, apiKey }) {
+export function verifyConfirmPageHTML({ code, apiKey, theme = "dark" }) {
   return authPage({
+    theme,
     title: "Verify your email",
     lead: "One tap confirms this address. Then go back to Vlix — it unlocks on its own.",
     body: `<form method="post" action="/auth/verify">
       <input type="hidden" name="code" value="${escapeAttr(code)}"/>
       <input type="hidden" name="apiKey" value="${escapeAttr(apiKey)}"/>
+      <input type="hidden" name="theme" value="${escapeAttr(theme)}"/>
       <button type="submit">Verify email</button>
     </form>`,
   });
 }
 
-export function verifySuccessPageHTML() {
+export function verifySuccessPageHTML(theme = "dark") {
   return authPage({
+    theme,
     title: "You're verified",
     lead: "Go back to Vlix. It will let you in on its own. You can close this page.",
   });
 }
 
-export function verifyErrorPageHTML(message) {
+export function verifyErrorPageHTML(message, theme = "dark") {
   return authPage({
+    theme,
     title: "Link didn't work",
     lead: message || "This link expired. Go back to Vlix and tap Resend email.",
   });
 }
 
-function authPage({ title, lead, body = "" }) {
+function authPage({ title, lead, body = "", theme = "dark" }) {
+  const mode = theme === "light" ? "light" : "dark";
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="${mode}">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="color-scheme" content="light dark"/>
+  <meta name="color-scheme" content="${mode}"/>
   <title>${escapeHtml(title)} — Vlix</title>
   <style>
-    :root { color-scheme: light dark; }
     body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-      background:#f4f4f5;color:#141416;
+      background:#0d0d0f;color:#f5f5f7;
       font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
       padding:24px;text-align:center;}
-    .card{width:100%;max-width:420px;background:#ffffff;border:1px solid rgba(0,0,0,.08);
+    .card{width:100%;max-width:420px;background:#1a1a1c;border:1px solid rgba(255,255,255,.08);
       border-radius:22px;overflow:hidden;}
-    .bar{height:3px;background:linear-gradient(90deg,#3a3a40,#8a8a90);}
+    .bar{height:3px;background:linear-gradient(90deg,#e0e0e6,#8c8c94);}
     .pad{padding:36px 28px 32px;}
-    .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#6e6e74;font-weight:600;margin-bottom:18px;}
-    h1{margin:0 0 12px;font-size:28px;letter-spacing:-.03em;font-weight:700;}
-    p{margin:0;color:#5c5c62;line-height:1.55;font-size:15px;}
-    button{margin-top:28px;border:0;background:#141416;color:#f4f4f5;font-weight:700;font-size:16px;
+    .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8c8c94;font-weight:600;margin-bottom:18px;}
+    h1{margin:0 0 12px;font-size:28px;letter-spacing:-.03em;font-weight:700;color:#f5f5f7;}
+    p{margin:0;color:#8c8c94;line-height:1.55;font-size:15px;}
+    button{margin-top:28px;border:0;background:#e0e0e6;color:#141416;font-weight:700;font-size:16px;
       padding:15px 32px;border-radius:999px;cursor:pointer;}
-    @media (prefers-color-scheme: dark) {
-      body{background:#0d0d0f;color:#e0e0e4;}
-      .card{background:#161618;border-color:rgba(255,255,255,.08);}
-      .bar{background:linear-gradient(90deg,#c8c8ce,#6e6e74);}
-      .eyebrow{color:#8a8a90;}
-      p{color:#8a8a90;}
-      button{background:#e0e0e4;color:#141416;}
-    }
+    html.light body{background:#f4f4f5;color:#141416;}
+    html.light .card{background:#ffffff;border-color:rgba(0,0,0,.08);}
+    html.light .bar{background:linear-gradient(90deg,#141416,#6e6e74);}
+    html.light .eyebrow, html.light p{color:#5c5c62;}
+    html.light h1{color:#141416;}
+    html.light button{background:#141416;color:#f4f4f5;}
   </style>
 </head>
 <body>

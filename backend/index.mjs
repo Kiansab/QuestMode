@@ -225,30 +225,37 @@ function html(res, body) {
 }
 
 /** Pull the one-time code out of Firebase's link so the email never opens Firebase's page. */
-function vlixVerifyUrl(firebaseLink) {
+function vlixVerifyUrl(firebaseLink, theme = "dark") {
   const params = new URL(firebaseLink).searchParams;
   const code = params.get("oobCode") || "";
   const apiKey = params.get("apiKey") || "";
   const url = new URL("/auth/verify", PUBLIC_BASE);
   url.searchParams.set("code", code);
   url.searchParams.set("key", apiKey);
+  url.searchParams.set("theme", theme === "light" ? "light" : "dark");
   return url.toString();
+}
+
+function themeFrom(value) {
+  return String(value || "").toLowerCase() === "light" ? "light" : "dark";
 }
 
 app.get("/auth/verify", (req, res) => {
   const code = String(req.query.code || "");
   const apiKey = String(req.query.key || "");
+  const theme = themeFrom(req.query.theme);
   if (!code || !apiKey) {
-    return html(res, verifyErrorPageHTML("This link is incomplete. Go back to Vlix and tap Resend email."));
+    return html(res, verifyErrorPageHTML("This link is incomplete. Go back to Vlix and tap Resend email.", theme));
   }
-  html(res, verifyConfirmPageHTML({ code, apiKey }));
+  html(res, verifyConfirmPageHTML({ code, apiKey, theme }));
 });
 
 app.post("/auth/verify", express.urlencoded({ extended: false }), async (req, res) => {
   const code = String(req.body?.code || "");
   const apiKey = String(req.body?.apiKey || "");
+  const theme = themeFrom(req.body?.theme);
   if (!code || !apiKey) {
-    return html(res, verifyErrorPageHTML("This link is incomplete. Go back to Vlix and tap Resend email."));
+    return html(res, verifyErrorPageHTML("This link is incomplete. Go back to Vlix and tap Resend email.", theme));
   }
   try {
     const r = await fetch(
@@ -263,15 +270,15 @@ app.post("/auth/verify", express.urlencoded({ extended: false }), async (req, re
     if (!r.ok) {
       const message = String(body?.error?.message || "");
       if (message === "INVALID_OOB_CODE" || message === "EXPIRED_OOB_CODE") {
-        return html(res, verifyErrorPageHTML("This link expired. Go back to Vlix and tap Resend email."));
+        return html(res, verifyErrorPageHTML("This link expired. Go back to Vlix and tap Resend email.", theme));
       }
       console.error("verify action failed", message || r.status);
-      return html(res, verifyErrorPageHTML("Couldn't verify that link. Go back to Vlix and tap Resend email."));
+      return html(res, verifyErrorPageHTML("Couldn't verify that link. Go back to Vlix and tap Resend email.", theme));
     }
-    return html(res, verifySuccessPageHTML());
+    return html(res, verifySuccessPageHTML(theme));
   } catch (e) {
     console.error(e);
-    return html(res, verifyErrorPageHTML("Couldn't verify that link. Go back to Vlix and tap Resend email."));
+    return html(res, verifyErrorPageHTML("Couldn't verify that link. Go back to Vlix and tap Resend email.", theme));
   }
 });
 
@@ -366,12 +373,13 @@ app.post("/v1/send-auth-email", async (req, res) => {
         url: AUTH_CONTINUE_URL,
         handleCodeInApp: false,
       });
+      const theme = themeFrom(req.body?.theme);
       await sendResendEmail({
         to: email,
         subject: "Verify your Vlix email",
         html: verificationEmailHTML({
           displayName: user.displayName || "",
-          verifyUrl: vlixVerifyUrl(link),
+          verifyUrl: vlixVerifyUrl(link, theme),
         }),
       });
       return res.json({ ok: true });
