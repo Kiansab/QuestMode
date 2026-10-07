@@ -34,15 +34,22 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="dark only" />
-  <meta name="supported-color-schemes" content="dark" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
   <title>${escapeHtml(title)}</title>
   <style>
-    :root { color-scheme: dark only; }
+    :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    @media (prefers-color-scheme: dark) {
+      .vlix-bg { background-color:#0d0d0f !important; background-image:linear-gradient(#0d0d0f,#0d0d0f) !important; }
+      .vlix-card { background-color:#1a1a1c !important; background-image:linear-gradient(#1a1a1c,#1a1a1c) !important; }
+      .vlix-title { color:#f5f5f7 !important; }
+      .vlix-muted, .vlix-eyebrow, .vlix-link { color:#8c8c94 !important; }
+      .vlix-btn { background-color:#e0e0e6 !important; color:#141416 !important; }
+    }
   </style>
 </head>
-<body class="vlix-bg" bgcolor="#0d0d0f" style="margin:0;padding:0;background:#0d0d0f;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <table class="vlix-bg" role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#0d0d0f" style="background:#0d0d0f;padding:48px 16px;">
+<body class="vlix-bg" bgcolor="#0d0d0f" style="margin:0;padding:0;background-color:#0d0d0f;background-image:linear-gradient(#0d0d0f,#0d0d0f);color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table class="vlix-bg" role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#0d0d0f" style="background-color:#0d0d0f;background-image:linear-gradient(#0d0d0f,#0d0d0f);padding:48px 16px;">
     <tr>
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:440px;">
@@ -52,7 +59,7 @@ function layout({ eyebrow, title, lead, ctaLabel, ctaUrl, footnote }) {
             </td>
           </tr>
           <tr>
-            <td class="vlix-card" bgcolor="#1a1a1c" style="background:#1a1a1c;border-radius:22px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
+            <td class="vlix-card" bgcolor="#1a1a1c" style="background-color:#1a1a1c;background-image:linear-gradient(#1a1a1c,#1a1a1c);border-radius:22px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="height:3px;background:linear-gradient(90deg,#c8c8ce 0%,#6e6e74 100%);font-size:0;line-height:0;">&nbsp;</td>
