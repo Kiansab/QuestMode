@@ -131,14 +131,11 @@ export function verifySuccessPageHTML(theme = "dark") {
   });
 }
 
-export function resetOpenAppPageHTML({ appUrl, theme = "dark" }) {
-  const safe = escapeAttr(appUrl);
+export function resetOpenAppPageHTML({ theme = "dark" }) {
   return authPage({
     theme,
-    title: "Continue in Vlix",
-    lead: "Choose your new password in the app. If Vlix doesn’t open, tap the button.",
-    body: `<a class="open-app" href="${safe}">Open Vlix</a>
-      <script>window.location.href=${JSON.stringify(appUrl)};</script>`,
+    title: "Email confirmed",
+    lead: "Go back to the Vlix app. It will ask you to choose a new password, then return you to sign in.",
   });
 }
 

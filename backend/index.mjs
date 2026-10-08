@@ -14,6 +14,7 @@
  * Response: { "assistantContent": "..." } or { "pong": true } for ping
  */
 
+import crypto from "crypto";
 import express from "express";
 import admin from "firebase-admin";
 import OpenAI from "openai";
@@ -243,8 +244,26 @@ function vlixVerifyUrl(firebaseLink, theme = "dark") {
   return vlixActionUrl(firebaseLink, "/auth/verify", theme);
 }
 
-function vlixResetUrl(firebaseLink, theme = "dark") {
-  return vlixActionUrl(firebaseLink, "/auth/reset", theme);
+function vlixResetUrl(firebaseLink, theme = "dark", session = "") {
+  const url = new URL(vlixActionUrl(firebaseLink, "/auth/reset", theme));
+  if (session) url.searchParams.set("session", session);
+  return url.toString();
+}
+
+/** session id → { code, apiKey, expires } once the email link is opened. */
+const passwordResetSessions = new Map();
+
+function rememberPasswordResetSession(session) {
+  const id = String(session || "");
+  if (!id) return;
+  passwordResetSessions.set(id, { code: "", apiKey: "", expires: Date.now() + 20 * 60 * 1000 });
+}
+
+function confirmPasswordResetSession(session, code, apiKey) {
+  const row = passwordResetSessions.get(String(session || ""));
+  if (!row || Date.now() > row.expires) return;
+  row.code = String(code || "");
+  row.apiKey = String(apiKey || "");
 }
 
 function themeFrom(value) {
@@ -268,8 +287,9 @@ app.get("/auth/reset", (req, res) => {
   if (!code || !apiKey) {
     return html(res, verifyErrorPageHTML("This reset link is incomplete. Go back to Vlix and send it again.", theme));
   }
-  const appUrl = `vlix://reset?code=${encodeURIComponent(code)}&key=${encodeURIComponent(apiKey)}`;
-  html(res, resetOpenAppPageHTML({ appUrl, theme }));
+  const session = String(req.query.session || "");
+  confirmPasswordResetSession(session, code, apiKey);
+  html(res, resetOpenAppPageHTML({ theme }));
 });
 
 app.post("/auth/reset", express.urlencoded({ extended: false }), async (req, res) => {
@@ -469,12 +489,14 @@ app.post("/v1/send-auth-email", async (req, res) => {
       handleCodeInApp: false,
     });
     const theme = themeFrom(req.body?.theme);
+    const session = crypto.randomBytes(24).toString("hex");
+    rememberPasswordResetSession(session);
     await sendResendEmail({
       to: email,
       subject: "Reset your Vlix password",
-      html: passwordResetEmailHTML({ resetUrl: vlixResetUrl(link, theme) }),
+      html: passwordResetEmailHTML({ resetUrl: vlixResetUrl(link, theme, session) }),
     });
-    return res.json({ ok: true, uidHint: Boolean(user) });
+    return res.json({ ok: true, session });
   } catch (e) {
     console.error(e);
     return res.status(e.status || 502).json({
@@ -482,6 +504,15 @@ app.post("/v1/send-auth-email", async (req, res) => {
       code: e.code || undefined,
     });
   }
+});
+
+app.get("/v1/password-reset-ready", (req, res) => {
+  const session = String(req.query.session || "");
+  const row = passwordResetSessions.get(session);
+  if (!row || Date.now() > row.expires || !row.code || !row.apiKey) {
+    return res.json({ ready: false });
+  }
+  return res.json({ ready: true, code: row.code, key: row.apiKey });
 });
 
 app.post("/v1/quest-chat", async (req, res) => {
