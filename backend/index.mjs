@@ -23,6 +23,8 @@ import {
   verifyConfirmPageHTML,
   verifySuccessPageHTML,
   verifyErrorPageHTML,
+  resetPasswordPageHTML,
+  resetPasswordSuccessPageHTML,
 } from "./emailTemplates.mjs";
 
 const MODEL = "gpt-4o-mini";
@@ -225,15 +227,23 @@ function html(res, body) {
 }
 
 /** Pull the one-time code out of Firebase's link so the email never opens Firebase's page. */
-function vlixVerifyUrl(firebaseLink, theme = "dark") {
+function vlixActionUrl(firebaseLink, path, theme = "dark") {
   const params = new URL(firebaseLink).searchParams;
   const code = params.get("oobCode") || "";
   const apiKey = params.get("apiKey") || "";
-  const url = new URL("/auth/verify", PUBLIC_BASE);
+  const url = new URL(path, PUBLIC_BASE);
   url.searchParams.set("code", code);
   url.searchParams.set("key", apiKey);
   url.searchParams.set("theme", theme === "light" ? "light" : "dark");
   return url.toString();
+}
+
+function vlixVerifyUrl(firebaseLink, theme = "dark") {
+  return vlixActionUrl(firebaseLink, "/auth/verify", theme);
+}
+
+function vlixResetUrl(firebaseLink, theme = "dark") {
+  return vlixActionUrl(firebaseLink, "/auth/reset", theme);
 }
 
 function themeFrom(value) {
@@ -248,6 +258,59 @@ app.get("/auth/verify", (req, res) => {
     return html(res, verifyErrorPageHTML("This link is incomplete. Go back to Vlix and tap Resend email.", theme));
   }
   html(res, verifyConfirmPageHTML({ code, apiKey, theme }));
+});
+
+app.get("/auth/reset", (req, res) => {
+  const code = String(req.query.code || "");
+  const apiKey = String(req.query.key || "");
+  const theme = themeFrom(req.query.theme);
+  if (!code || !apiKey) {
+    return html(res, verifyErrorPageHTML("This reset link is incomplete. Go back to Vlix and send it again.", theme));
+  }
+  html(res, resetPasswordPageHTML({ code, apiKey, theme }));
+});
+
+app.post("/auth/reset", express.urlencoded({ extended: false }), async (req, res) => {
+  const code = String(req.body?.code || "");
+  const apiKey = String(req.body?.apiKey || "");
+  const theme = themeFrom(req.body?.theme);
+  const password = String(req.body?.password || "");
+  const confirm = String(req.body?.confirm || "");
+  if (!code || !apiKey) {
+    return html(res, verifyErrorPageHTML("This reset link is incomplete. Go back to Vlix and send it again.", theme));
+  }
+  if (password.length < 6) {
+    return html(res, resetPasswordPageHTML({ code, apiKey, theme, error: "Use at least 6 characters." }));
+  }
+  if (password !== confirm) {
+    return html(res, resetPasswordPageHTML({ code, apiKey, theme, error: "Those passwords don’t match." }));
+  }
+  try {
+    const r = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oobCode: code, newPassword: password }),
+      }
+    );
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const message = String(body?.error?.message || "");
+      if (message === "INVALID_OOB_CODE" || message === "EXPIRED_OOB_CODE") {
+        return html(res, verifyErrorPageHTML("This link expired. Go back to Vlix and send a new one.", theme));
+      }
+      if (message.startsWith("WEAK_PASSWORD")) {
+        return html(res, resetPasswordPageHTML({ code, apiKey, theme, error: "That password is too easy. Try a longer one." }));
+      }
+      console.error("reset action failed", message || r.status);
+      return html(res, resetPasswordPageHTML({ code, apiKey, theme, error: "Couldn’t save that password. Send a new link from Vlix." }));
+    }
+    return html(res, resetPasswordSuccessPageHTML(theme));
+  } catch (e) {
+    console.error(e);
+    return html(res, resetPasswordPageHTML({ code, apiKey, theme, error: "Couldn’t reach the password service. Try again." }));
+  }
 });
 
 app.post("/auth/verify", express.urlencoded({ extended: false }), async (req, res) => {
@@ -403,10 +466,11 @@ app.post("/v1/send-auth-email", async (req, res) => {
       url: AUTH_CONTINUE_URL,
       handleCodeInApp: false,
     });
+    const theme = themeFrom(req.body?.theme);
     await sendResendEmail({
       to: email,
       subject: "Reset your Vlix password",
-      html: passwordResetEmailHTML({ resetUrl: link }),
+      html: passwordResetEmailHTML({ resetUrl: vlixResetUrl(link, theme) }),
     });
     return res.json({ ok: true, uidHint: Boolean(user) });
   } catch (e) {
@@ -442,13 +506,13 @@ app.post("/v1/quest-chat", async (req, res) => {
   }
 
   const kindCaps = {
-    onboarding_turn: 320,
-    replacement: 280,
-    daily_extra: 420,
-    daily: 520,
+    onboarding_turn: 880,
+    replacement: 420,
+    daily_extra: 780,
+    daily: 860,
   };
   const tokenCap = Math.min(
-    900,
+    1200,
     Math.max(120, Number(maxTokens) || kindCaps[kind] || 480)
   );
   const temp = typeof temperature === "number" && temperature >= 0 && temperature <= 1.2

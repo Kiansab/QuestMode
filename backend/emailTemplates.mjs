@@ -131,6 +131,34 @@ export function verifySuccessPageHTML(theme = "dark") {
   });
 }
 
+export function resetPasswordPageHTML({ code, apiKey, theme = "dark", error = "" }) {
+  const err = error
+    ? `<p style="color:#ff8a80;margin-top:14px;">${escapeHtml(error)}</p>`
+    : "";
+  return authPage({
+    theme,
+    title: "Choose a new password",
+    lead: "At least 6 characters. Then go back to Vlix and sign in.",
+    body: `<form method="post" action="/auth/reset">
+      <input type="hidden" name="code" value="${escapeAttr(code)}"/>
+      <input type="hidden" name="apiKey" value="${escapeAttr(apiKey)}"/>
+      <input type="hidden" name="theme" value="${escapeAttr(theme)}"/>
+      <input type="password" name="password" placeholder="New password" minlength="6" autocomplete="new-password" required/>
+      <input type="password" name="confirm" placeholder="Confirm password" minlength="6" autocomplete="new-password" required/>
+      ${err}
+      <button type="submit">Save password</button>
+    </form>`,
+  });
+}
+
+export function resetPasswordSuccessPageHTML(theme = "dark") {
+  return authPage({
+    theme,
+    title: "Password updated",
+    lead: "Go back to Vlix and sign in with your new password. You can close this page.",
+  });
+}
+
 export function verifyErrorPageHTML(message, theme = "dark") {
   return authPage({
     theme,
@@ -161,7 +189,10 @@ function authPage({ title, lead, body = "", theme = "dark" }) {
     h1{margin:0 0 12px;font-size:28px;letter-spacing:-.03em;font-weight:700;color:#f5f5f7;}
     p{margin:0;color:#8c8c94;line-height:1.55;font-size:15px;}
     button{margin-top:28px;border:0;background:#e0e0e6;color:#141416;font-weight:700;font-size:16px;
-      padding:15px 32px;border-radius:999px;cursor:pointer;}
+      padding:15px 32px;border-radius:999px;cursor:pointer;width:100%;}
+    input[type="password"]{display:block;width:100%;box-sizing:border-box;margin-top:12px;background:#141416;color:#f5f5f7;
+      border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;font-size:16px;}
+    html.light input[type="password"]{background:#f4f4f5;color:#141416;border-color:rgba(0,0,0,.12);}
     html.light body{background:#f4f4f5;color:#141416;}
     html.light .card{background:#ffffff;border-color:rgba(0,0,0,.08);}
     html.light .bar{background:linear-gradient(90deg,#141416,#6e6e74);}
