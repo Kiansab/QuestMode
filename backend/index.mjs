@@ -245,25 +245,62 @@ function vlixVerifyUrl(firebaseLink, theme = "dark") {
 }
 
 function vlixResetUrl(firebaseLink, theme = "dark", session = "") {
-  const url = new URL(vlixActionUrl(firebaseLink, "/auth/reset", theme));
+  const params = new URL(firebaseLink).searchParams;
+  const oob = params.get("oobCode") || "";
+  const apiKey = params.get("apiKey") || "";
+  const url = new URL("/auth/reset", PUBLIC_BASE);
+  url.searchParams.set("c", Buffer.from(oob, "utf8").toString("base64url"));
+  url.searchParams.set("key", apiKey);
+  url.searchParams.set("theme", theme === "light" ? "light" : "dark");
   if (session) url.searchParams.set("session", session);
   return url.toString();
 }
 
-/** session id → { code, apiKey, expires } once the email link is opened. */
-const passwordResetSessions = new Map();
-
-function rememberPasswordResetSession(session) {
-  const id = String(session || "");
-  if (!id) return;
-  passwordResetSessions.set(id, { code: "", apiKey: "", expires: Date.now() + 20 * 60 * 1000 });
+function decodeResetCode(value) {
+  const raw = String(value || "");
+  if (!raw) return "";
+  try {
+    return Buffer.from(raw, "base64url").toString("utf8");
+  } catch {
+    return raw;
+  }
 }
 
-function confirmPasswordResetSession(session, code, apiKey) {
-  const row = passwordResetSessions.get(String(session || ""));
-  if (!row || Date.now() > row.expires) return;
-  row.code = String(code || "");
-  row.apiKey = String(apiKey || "");
+/** session id → reset code kept on the server so email apps can't break or spend it. */
+const passwordResetSessions = new Map();
+
+function storePasswordResetSession(session, code, apiKey) {
+  const id = String(session || "");
+  if (!id || !code || !apiKey) return;
+  passwordResetSessions.set(id, {
+    code: String(code),
+    apiKey: String(apiKey),
+    confirmed: false,
+    succeeded: false,
+    saving: false,
+    expires: Date.now() + 60 * 60 * 1000,
+  });
+}
+
+function openPasswordResetSession(session, code, apiKey) {
+  const id = String(session || "");
+  if (!id) return;
+  const row = passwordResetSessions.get(id);
+  if (!row || Date.now() > row.expires) {
+    if (!code || !apiKey) return;
+    passwordResetSessions.set(id, {
+      code,
+      apiKey,
+      confirmed: true,
+      succeeded: false,
+      saving: false,
+      expires: Date.now() + 60 * 60 * 1000,
+    });
+    return;
+  }
+  row.confirmed = true;
+  if (!row.code && code) row.code = code;
+  if (!row.apiKey && apiKey) row.apiKey = apiKey;
 }
 
 function themeFrom(value) {
@@ -281,14 +318,14 @@ app.get("/auth/verify", (req, res) => {
 });
 
 app.get("/auth/reset", (req, res) => {
-  const code = String(req.query.code || "");
-  const apiKey = String(req.query.key || "");
   const theme = themeFrom(req.query.theme);
-  if (!code || !apiKey) {
+  const session = String(req.query.session || "");
+  const apiKey = String(req.query.key || "");
+  const code = req.query.c ? decodeResetCode(req.query.c) : String(req.query.code || "");
+  if (!session || !code || !apiKey) {
     return html(res, verifyErrorPageHTML("This reset link is incomplete. Go back to Vlix and send it again.", theme));
   }
-  const session = String(req.query.session || "");
-  confirmPasswordResetSession(session, code, apiKey);
+  openPasswordResetSession(session, code, apiKey);
   html(res, resetOpenAppPageHTML({ theme }));
 });
 
@@ -490,7 +527,8 @@ app.post("/v1/send-auth-email", async (req, res) => {
     });
     const theme = themeFrom(req.body?.theme);
     const session = crypto.randomBytes(24).toString("hex");
-    rememberPasswordResetSession(session);
+    const linkParams = new URL(link).searchParams;
+    storePasswordResetSession(session, linkParams.get("oobCode") || "", linkParams.get("apiKey") || "");
     await sendResendEmail({
       to: email,
       subject: "Reset your Vlix password",
@@ -509,10 +547,62 @@ app.post("/v1/send-auth-email", async (req, res) => {
 app.get("/v1/password-reset-ready", (req, res) => {
   const session = String(req.query.session || "");
   const row = passwordResetSessions.get(session);
-  if (!row || Date.now() > row.expires || !row.code || !row.apiKey) {
+  if (!row || Date.now() > row.expires || !row.confirmed) {
     return res.json({ ready: false });
   }
-  return res.json({ ready: true, code: row.code, key: row.apiKey });
+  return res.json({ ready: true });
+});
+
+app.post("/v1/password-reset-complete", async (req, res) => {
+  const session = String(req.body?.session || "");
+  const password = String(req.body?.password || "");
+  const row = passwordResetSessions.get(session);
+  if (!row || Date.now() > row.expires) {
+    return res.status(400).json({ error: "This reset expired. Send a new email from Vlix." });
+  }
+  if (!row.confirmed) {
+    return res.status(400).json({ error: "Open the link in your email first, then come back to Vlix." });
+  }
+  if (row.succeeded) return res.json({ ok: true });
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Use at least 6 characters." });
+  }
+  if (row.saving) {
+    return res.status(409).json({ error: "Still saving that password. Wait a moment." });
+  }
+  row.saving = true;
+  try {
+    const r = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=${encodeURIComponent(row.apiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oobCode: row.code, newPassword: password }),
+      }
+    );
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      row.saving = false;
+      if (row.succeeded) return res.json({ ok: true });
+      const message = String(body?.error?.message || "");
+      if (message === "INVALID_OOB_CODE" || message === "EXPIRED_OOB_CODE") {
+        return res.status(400).json({ error: "This reset link was already used. Send a new email from Vlix." });
+      }
+      if (message.startsWith("WEAK_PASSWORD")) {
+        return res.status(400).json({ error: "That password is too easy. Try a longer one." });
+      }
+      console.error("reset complete failed", message || r.status);
+      return res.status(400).json({ error: "Couldn't save that password. Try again." });
+    }
+    row.succeeded = true;
+    row.saving = false;
+    row.code = "";
+    return res.json({ ok: true });
+  } catch (e) {
+    row.saving = false;
+    console.error(e);
+    return res.status(502).json({ error: "Couldn't reach the password service. Try again." });
+  }
 });
 
 app.post("/v1/quest-chat", async (req, res) => {
