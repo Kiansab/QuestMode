@@ -25,6 +25,7 @@ import {
   verifyErrorPageHTML,
   resetPasswordPageHTML,
   resetPasswordSuccessPageHTML,
+  resetOpenAppPageHTML,
 } from "./emailTemplates.mjs";
 
 const MODEL = "gpt-4o-mini";
@@ -267,7 +268,8 @@ app.get("/auth/reset", (req, res) => {
   if (!code || !apiKey) {
     return html(res, verifyErrorPageHTML("This reset link is incomplete. Go back to Vlix and send it again.", theme));
   }
-  html(res, resetPasswordPageHTML({ code, apiKey, theme }));
+  const appUrl = `vlix://reset?code=${encodeURIComponent(code)}&key=${encodeURIComponent(apiKey)}`;
+  html(res, resetOpenAppPageHTML({ appUrl, theme }));
 });
 
 app.post("/auth/reset", express.urlencoded({ extended: false }), async (req, res) => {

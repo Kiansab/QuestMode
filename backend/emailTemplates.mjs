@@ -131,6 +131,17 @@ export function verifySuccessPageHTML(theme = "dark") {
   });
 }
 
+export function resetOpenAppPageHTML({ appUrl, theme = "dark" }) {
+  const safe = escapeAttr(appUrl);
+  return authPage({
+    theme,
+    title: "Continue in Vlix",
+    lead: "Choose your new password in the app. If Vlix doesn’t open, tap the button.",
+    body: `<a class="open-app" href="${safe}">Open Vlix</a>
+      <script>window.location.href=${JSON.stringify(appUrl)};</script>`,
+  });
+}
+
 export function resetPasswordPageHTML({ code, apiKey, theme = "dark", error = "" }) {
   const err = error
     ? `<p style="color:#ff8a80;margin-top:14px;">${escapeHtml(error)}</p>`
@@ -188,8 +199,8 @@ function authPage({ title, lead, body = "", theme = "dark" }) {
     .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8c8c94;font-weight:600;margin-bottom:18px;}
     h1{margin:0 0 12px;font-size:28px;letter-spacing:-.03em;font-weight:700;color:#f5f5f7;}
     p{margin:0;color:#8c8c94;line-height:1.55;font-size:15px;}
-    button{margin-top:28px;border:0;background:#e0e0e6;color:#141416;font-weight:700;font-size:16px;
-      padding:15px 32px;border-radius:999px;cursor:pointer;width:100%;}
+    button, a.open-app{display:block;box-sizing:border-box;margin-top:28px;border:0;background:#e0e0e6;color:#141416;font-weight:700;font-size:16px;
+      padding:15px 32px;border-radius:999px;cursor:pointer;width:100%;text-decoration:none;text-align:center;}
     input[type="password"]{display:block;width:100%;box-sizing:border-box;margin-top:12px;background:#141416;color:#f5f5f7;
       border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;font-size:16px;}
     html.light input[type="password"]{background:#f4f4f5;color:#141416;border-color:rgba(0,0,0,.12);}
